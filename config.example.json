@@ -1,0 +1,22 @@
+{
+
+    "bot_token"             : "bot_token",
+
+    "embed_color"           : 12345,
+
+    "secret_key"            : "secret_key",
+    "standard_port"         : 12345,
+    "multicast_port"        : 12345,
+
+    "community_server_id"   : 1234567890,
+    "log_channel_id"        : 1234567890,
+
+    "db_name"               : "db_name",
+    "db_user"               : "db_user",
+    "db_password"           : "db_password",
+    "db_host"               : "localhost",
+    "db_port"               : 3306,
+
+    "topgg_token"           : "topgg_token"
+
+}
