@@ -1,3 +1,5 @@
+import random
+
 import aiohttp
 
 import discord
@@ -14,6 +16,7 @@ class Fun(commands.Cog):
 
     @app_commands.command(name="owo", description="Uwu-fyies your text.")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    @app_commands.guild_only()
     async def _owo(self, ctx: discord.Interaction, text: str):
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
@@ -22,14 +25,26 @@ class Fun(commands.Cog):
 
     @app_commands.command(name="meme", description="Send a random meme.")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    @app_commands.guild_only()
     async def _meme(self, ctx: discord.Interaction):
-        embed = discord.Embed(colour=self.bot.embed_colour)
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://meme-api.com/gimme/10") as res:
+        embed = discord.Embed(colour=self.bot.embed_color)
+
+        _subreddits = ["memes", "dankmemes", "me_irl", "wholesomememes", "comedyheaven"]
+
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
+            async with session.get(
+                f"https://meme-api.com/gimme/{random.choice(_subreddits)}/5"
+            ) as res:
                 if res.status != 200:
-                    return await ctx.edit_original_response(content="An API-side error occurred. "
-                                                                    "Please try again in sometime.")
+                    return await ctx.edit_original_response(
+                        content="An API-side error occurred. "
+                        "Please try again in sometime."
+                    )
 
                 res = await res.json()
                 res = res["memes"]
@@ -41,73 +56,87 @@ class Fun(commands.Cog):
                     else:
                         break
 
-        embed.title = f"[**{meme['subreddit']}** by **{meme['author']}**]({[meme['postLink']]})"
+        embed.title = f"**/r/{meme['subreddit']} by {meme['author']}**"
+        embed.url = meme["postLink"]
         embed.description = meme["title"]
         embed.set_image(url=meme["url"])
 
-        embed.set_footer(text=f"{meme['ups']} \U0001f44d {meme['downs']} \U0001f44e {meme['comments']} \U0001f5e8")
+        embed.set_footer(text=f"{meme['ups']} \U0001f44d")
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="dog", description="Send a random dog\"s image.")
+    @app_commands.command(name="dog", description="Send a random dog's image.")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    @app_commands.guild_only()
     async def _dog(self, ctx: discord.Interaction):
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://dog.ceo/api/breeds/image/random") as res:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
+            async with session.get("https://shibe.online/api/shibes") as res:
                 if res.status != 200:
-                    return await ctx.edit_original_response(content="An API-side error occurred. "
-                                                                    "Please try again in sometime.")
+                    return await ctx.edit_original_response(
+                        content="An API-side error occurred. "
+                        "Please try again in sometime."
+                    )
 
                 res = await res.json()
-                img_url = res["message"]
+                img_url = res[0]
 
-        embed = discord.Embed(colour=self.bot.embed_colour)
-        embed.title = "Random Doggo \U0001f436"
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.title = "Random Doggo \U0001f436 \U0001F60D"
         embed.set_image(url=img_url)
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="cat", description="Send a random cat\"s image.")
+    @app_commands.command(name="cat", description="Send a random cat's image.")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _cat(self, ctx: discord.Interaction):
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
             async with session.get("https://shibe.online/api/cats") as res:
                 if res.status != 200:
-                    return await ctx.edit_original_response(content="An API-side error occurred. "
-                                                                    "Please try again in sometime.")
+                    return await ctx.edit_original_response(
+                        content="An API-side error occurred. "
+                        "Please try again in sometime."
+                    )
 
                 res = await res.json()
                 img_url = res[0]
 
-        embed = discord.Embed(colour=self.bot.embed_colour)
-        embed.title = "Random Kitty \U0001f431"
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.title = "Random Kitty \U0001f431 \U0001F60D"
         embed.set_image(url=img_url)
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="bird", description="Send a random bird\"s image.")
+    @app_commands.command(name="bird", description="Send a random bird's image.")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _bird(self, ctx: discord.Interaction):
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
             async with session.get("https://shibe.online/api/birds") as res:
                 if res.status != 200:
-                    return await ctx.edit_original_response(content="An API-side error occurred. "
-                                                                    "Please try again in sometime.")
+                    return await ctx.edit_original_response(
+                        content="An API-side error occurred. "
+                        "Please try again in sometime."
+                    )
 
                 res = await res.json()
                 img_url = res[0]
 
-        embed = discord.Embed(colour=self.bot.embed_colour)
-        embed.title = "Random Birdie \U0001F60D"
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.title = "Random Birdie \U0001f426 \U0001F60D"
         embed.set_image(url=img_url)
 
         await ctx.edit_original_response(embed=embed)

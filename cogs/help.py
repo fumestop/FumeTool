@@ -31,7 +31,27 @@ class Help(commands.Cog):
 
         embed.add_field(
             name="Fun",
-            value=f"`meme`, `dog`, `cat`, `bird`",
+            value=f"`owo`, `meme`, `dog`, `cat`, `bird`",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Development",
+            value=f"`dns`, `ip`, `scan`, `screenshot`, `whois`, `dstatus`, `gstatus`, `pypi`, `npm`, "
+            f"`tts`",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Utility",
+            value=f"`user`, `server`, `bot`, `role`, `roles`, `steam`, `translate`, `define`, `urban`, "
+            f"`wikipedia`, `weather`, `poll`, `avatar`",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Tags",
+            value=f"`tag`, `traw`, `tadd`, `tlist`, `tedit`, `tdel`, `tclaim`, `talias`, `tinfo`, `tsearch`",
             inline=False,
         )
 

@@ -17,6 +17,9 @@
     "db_host"               : "localhost",
     "db_port"               : 3306,
 
+    "steam_api_key"         : "steam_api_key",
+    "weather_api_key"       : "weather_api_key",
+
     "topgg_token"           : "topgg_token"
 
 }

@@ -3,6 +3,8 @@ import string
 import random
 import traceback
 
+import asyncio
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -29,11 +31,11 @@ class Error(commands.Cog):
             if isinstance(error, app_commands.CheckFailure):
                 return
 
-            if isinstance(error, app_commands.CommandOnCooldown):
+            elif isinstance(error, app_commands.CommandOnCooldown):
                 message = f"You are on cooldown. Please try again in **{round(error.retry_after, 2)}** seconds."
 
             else:
-                embed = discord.Embed(colour=self.bot.embed_colour)
+                embed = discord.Embed(colour=self.bot.embed_color)
 
                 embed.title = "Oops! Something went wrong."
                 embed.description = (

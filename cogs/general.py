@@ -18,7 +18,7 @@ class General(commands.Cog):
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        embed = discord.Embed(colour=self.bot.embed_colour)
+        embed = discord.Embed(colour=self.bot.embed_color)
         embed.description = "**Pong!**"
 
         ms = self.bot.latency * 1000
@@ -36,9 +36,7 @@ class General(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(
-        name="web", description="Shows web resources about FumeTool."
-    )
+    @app_commands.command(name="web", description="Shows web resources about FumeTool.")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _web(self, ctx: discord.Interaction):
         # noinspection PyUnresolvedReferences

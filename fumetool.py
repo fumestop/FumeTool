@@ -29,10 +29,11 @@ class FumeTool(commands.AutoShardedBot):
         self.log = logging.getLogger()
         self.launch_time = datetime.utcnow()
 
-        self.embed_colour = int(hex(embed_color), 16)
+        self.embed_color = int(hex(embed_color), 16)
 
 
 intents = discord.Intents.default()
+intents.presences = True
 intents.members = True
 
 bot = FumeTool(
