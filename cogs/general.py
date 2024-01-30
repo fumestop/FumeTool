@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import math
 from datetime import datetime
 
@@ -7,14 +10,18 @@ from discord.ext import commands
 
 from utils.cd import cooldown_level_0
 
+if TYPE_CHECKING:
+    from bot import FumeTool
+
 
 class General(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: FumeTool):
+        self.bot: FumeTool = bot
 
-    @app_commands.command(name="ping", description="Returns the API and bot latency.")
+    @app_commands.command(name="ping")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _ping(self, ctx: discord.Interaction):
+        """Returns the API and bot latency."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -36,9 +43,10 @@ class General(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="web", description="Shows web resources about FumeTool.")
+    @app_commands.command(name="web")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _web(self, ctx: discord.Interaction):
+        """Shows the links to various FumeTool resources on the web."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -64,11 +72,10 @@ class General(commands.Cog):
             view=view,
         )
 
-    @app_commands.command(
-        name="invite", description="Shows the invite link for FumeTool."
-    )
+    @app_commands.command(name="invite")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _invite(self, ctx: discord.Interaction):
+        """Sends the link to invite FumeTool to your server."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -84,9 +91,10 @@ class General(commands.Cog):
             content="Thank you for choosing me!", view=view
         )
 
-    @app_commands.command(name="vote", description="Vote for FumeTool on Top.GG!")
+    @app_commands.command(name="vote")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _vote(self, ctx: discord.Interaction):
+        """Sends the link to vote for FumeTool on Top.GG."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -99,29 +107,28 @@ class General(commands.Cog):
             content="Thank you for choosing to vote for me!", view=view
         )
 
-    @app_commands.command(
-        name="review", description="Leave a review for FumeTool on Top.GG!"
-    )
+    @app_commands.command(name="review")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _review(self, ctx: discord.Interaction):
+        """Sends the link to review FumeTool on Top.GG."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
         view = discord.ui.View()
         view.add_item(
-            discord.ui.Button(label="Review", url="https://fumes.top/fumetool/review")
+            discord.ui.Button(
+                label="Review", url="https://fumes.top/fumetool/review"
+            )
         )
 
         await ctx.edit_original_response(
             content="Thank you for reviewing me!", view=view
         )
 
-    @app_commands.command(
-        name="community",
-        description="Sends the invite to the official community server.",
-    )
+    @app_commands.command(name="community")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _community(self, ctx: discord.Interaction):
+        """Sends the link to the FumeTool community server."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -137,5 +144,5 @@ class General(commands.Cog):
         )
 
 
-async def setup(bot):
+async def setup(bot: FumeTool):
     await bot.add_cog(General(bot))

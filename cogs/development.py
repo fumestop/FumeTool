@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import asyncio
 import random
 import string
@@ -18,10 +21,13 @@ from PIL import Image, UnidentifiedImageError
 
 from utils.cd import cooldown_level_1
 
+if TYPE_CHECKING:
+    from bot import FumeTool
+
 
 class Development(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: FumeTool):
+        self.bot: FumeTool = bot
 
         self.overall_status = {
             "All Systems Operational": "\U0001F7E2",
@@ -36,12 +42,11 @@ class Development(commands.Cog):
             "Major Outage": "\U0001F534",
         }
 
-    @app_commands.command(
-        name="dstatus", description="Fetch Discord overall and component status."
-    )
+    @app_commands.command(name="dstatus")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _d_status(self, ctx: discord.Interaction):
+        """Fetch Discord overall and component status."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -71,7 +76,9 @@ class Development(commands.Cog):
         )
 
         with suppress(KeyError):
-            embed.add_field(name="Last Updated", value=response["page"]["updated_at"])
+            embed.add_field(
+                name="Last Updated", value=response["page"]["updated_at"]
+            )
 
         embed.add_field(name="API", value=f"{self.component_status[api]} {api}")
 
@@ -83,7 +90,9 @@ class Development(commands.Cog):
             name="Push Notifications",
             value=f"{self.component_status[push_notifications]} {push_notifications}",
         )
-        embed.add_field(name="Voice", value=f"{self.component_status[voice]} {voice}")
+        embed.add_field(
+            name="Voice", value=f"{self.component_status[voice]} {voice}"
+        )
         embed.add_field(
             name="Third Party",
             value=f"{self.component_status[third_party]} {third_party}",
@@ -110,12 +119,11 @@ class Development(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(
-        name="gstatus", description="Fetch GitHub overall and component status."
-    )
+    @app_commands.command(name="gstatus")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _g_status(self, ctx: discord.Interaction):
+        """Fetch GitHub overall and component status."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -132,7 +140,9 @@ class Development(commands.Cog):
         embed.title = "Github Status"
 
         comment = response["status"]["description"]
-        git_operations = response["components"][0]["status"].replace("_", " ").title()
+        git_operations = (
+            response["components"][0]["status"].replace("_", " ").title()
+        )
         git_api = response["components"][1]["status"].replace("_", " ").title()
         git_webhooks = response["components"][2]["status"].replace("_", " ").title()
         git_functions = response["components"][4]["status"].replace("_", " ").title()
@@ -146,7 +156,9 @@ class Development(commands.Cog):
             value=f"{self.overall_status[comment]} {comment}",
         )
         with suppress(KeyError):
-            embed.add_field(name="Last Updated", value=response["page"]["updated_at"])
+            embed.add_field(
+                name="Last Updated", value=response["page"]["updated_at"]
+            )
         embed.add_field(
             name="GitHub Operations",
             value=f"{self.component_status[git_operations]} {git_operations}",
@@ -174,7 +186,9 @@ class Development(commands.Cog):
             name="GitHub Pages",
             value=f"{self.component_status[git_pages]} {git_pages}",
         )
-        embed.add_field(name="Other", value=f"{self.component_status[other]} {other}")
+        embed.add_field(
+            name="Other", value=f"{self.component_status[other]} {other}"
+        )
 
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10)
@@ -197,9 +211,7 @@ class Development(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(
-        name="dns", description="Looks up the various DNS records of a domain."
-    )
+    @app_commands.command(name="dns")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     @app_commands.choices(
@@ -219,6 +231,16 @@ class Development(commands.Cog):
     async def _dns(
         self, ctx: discord.Interaction, record: app_commands.Choice[str], domain: str
     ):
+        """Looks up the various DNS records of a domain.
+
+        Parameters
+        ----------
+        record : app_commands.Choice[str]
+            The record type to look up.
+        domain : str
+            The domain to look up.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -250,7 +272,9 @@ class Development(commands.Cog):
                     )
 
                 finally:
-                    embed.add_field(name="Records", value=f"{field}```", inline=False)
+                    embed.add_field(
+                        name="Records", value=f"{field}```", inline=False
+                    )
 
             else:
                 for _record in [
@@ -289,10 +313,20 @@ class Development(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="scan", description="Scans a particular port on a host.")
+    @app_commands.command(name="scan")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _scan(self, ctx: discord.Interaction, host: str, port: int):
+        """Scans a particular port on a host.
+
+        Parameters
+        ----------
+        host : str
+            The host to scan.
+        port : int
+            The port to scan.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -346,13 +380,18 @@ class Development(commands.Cog):
                 content=f"`{host}` is not a valid address."
             )
 
-    @app_commands.command(
-        name="whois",
-        description="Retrieves a domain's information from the WHOIS database.",
-    )
+    @app_commands.command(name="whois")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _whois(self, ctx: discord.Interaction, domain: str):
+        """Retrieves a domain's information from the WHOIS database.
+
+        Parameters
+        ----------
+        domain : str
+            The domain to look up.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -435,7 +474,9 @@ class Development(commands.Cog):
         with suppress(KeyError):
             embed.add_field(name="Country", value=dm_info["country"])
         with suppress(KeyError):
-            embed.add_field(name="Postal Code", value=dm_info["registrant_postal_code"])
+            embed.add_field(
+                name="Postal Code", value=dm_info["registrant_postal_code"]
+            )
 
         nameservers = (
             "\n".join(dm_info["name_servers"])
@@ -446,12 +487,18 @@ class Development(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(
-        name="ip", description="Get various information about an IP address."
-    )
+    @app_commands.command(name="ip")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _ip(self, ctx: discord.Interaction, address: str):
+        """Retrieves various information about an IP address.
+
+        Parameters
+        ----------
+        address : str
+            The IP address to look up.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -488,7 +535,8 @@ class Development(commands.Cog):
 
                         with suppress(KeyError):
                             embed.add_field(
-                                name="Anycast", value="Yes" if res["anycast"] else "No"
+                                name="Anycast",
+                                value="Yes" if res["anycast"] else "No",
                             )
 
                         with suppress(KeyError):
@@ -522,13 +570,18 @@ class Development(commands.Cog):
                         "your request. Please try again later."
                     )
 
-    @app_commands.command(
-        name="pypi",
-        description="Fetch information about a package from Python Package Index (PyPI).",
-    )
+    @app_commands.command(name="pypi")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _pypi(self, ctx: discord.Interaction, package: str):
+        """Fetch information about a package from Python Package Index (PyPI).
+
+        Parameters
+        ----------
+        package : str
+            The package to look up.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -575,13 +628,18 @@ class Development(commands.Cog):
                         "processing your request. Please try again later."
                     )
 
-    @app_commands.command(
-        name="npm",
-        description="Fetch information about a package from Node Package Manager (npm).",
-    )
+    @app_commands.command(name="npm")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     async def _npm(self, ctx: discord.Interaction, package: str):
+        """Fetch information about a package from Node Package Manager (npm).
+
+        Parameters
+        ----------
+        package : str
+            The package to look up.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -629,9 +687,7 @@ class Development(commands.Cog):
                         "processing your request. Please try again later."
                     )
 
-    @app_commands.command(
-        name="screenshot", description="Get the screenshot of a website."
-    )
+    @app_commands.command(name="screenshot")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
     @app_commands.choices(
@@ -643,8 +699,22 @@ class Development(commands.Cog):
         ]
     )
     async def _screenshot(
-        self, ctx: discord.Interaction, url: str, style: app_commands.Choice[str] = None
+        self,
+        ctx: discord.Interaction,
+        url: str,
+        style: app_commands.Choice[str] = None,
     ):
+        """Get the screenshot of a website.
+
+        Parameters
+        ----------
+        url : str
+            The URL to screenshot.
+
+        style : app_commands.Choice[str], optional
+            The style of the screenshot.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -729,5 +799,5 @@ class Development(commands.Cog):
         await ctx.edit_original_response(attachments=[file])
 
 
-async def setup(bot):
+async def setup(bot: FumeTool):
     await bot.add_cog(Development(bot))

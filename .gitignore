@@ -160,7 +160,7 @@ cython_debug/
 .idea/
 
 # FumeTool
+data/*.json
 logs/*.log
 logs/errors/*.log
-
-config.json
+config.py

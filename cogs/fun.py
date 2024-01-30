@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import random
 
 import aiohttp
@@ -9,30 +12,48 @@ from discord.ext import commands
 from utils.cd import cooldown_level_0
 from utils.tools import owo_fy
 
+if TYPE_CHECKING:
+    from bot import FumeTool
+
 
 class Fun(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: FumeTool):
+        self.bot: FumeTool = bot
 
-    @app_commands.command(name="owo", description="Uwu-fyies your text.")
+    @app_commands.command(name="owo")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
     async def _owo(self, ctx: discord.Interaction, text: str):
+        """Uwu-fyies your text.
+
+        Parameters
+        ----------
+        text: str
+            The text to be uwu-fied.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
         await ctx.edit_original_response(content=owo_fy(text))
 
-    @app_commands.command(name="meme", description="Send a random meme.")
+    @app_commands.command(name="meme")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
     async def _meme(self, ctx: discord.Interaction):
+        """Send a random meme from Reddit."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
         embed = discord.Embed(colour=self.bot.embed_color)
 
-        _subreddits = ["memes", "dankmemes", "me_irl", "wholesomememes", "comedyheaven"]
+        _subreddits = [
+            "memes",
+            "dankmemes",
+            "me_irl",
+            "wholesomememes",
+            "comedyheaven",
+        ]
 
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10)
@@ -65,10 +86,11 @@ class Fun(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="dog", description="Send a random dog's image.")
+    @app_commands.command(name="dog")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
     async def _dog(self, ctx: discord.Interaction):
+        """Send a random dog's image."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -91,9 +113,10 @@ class Fun(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="cat", description="Send a random cat's image.")
+    @app_commands.command(name="cat")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _cat(self, ctx: discord.Interaction):
+        """Send a random cat's image."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -116,9 +139,10 @@ class Fun(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="bird", description="Send a random bird's image.")
+    @app_commands.command(name="bird")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _bird(self, ctx: discord.Interaction):
+        """Send a random bird's image."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
@@ -142,5 +166,5 @@ class Fun(commands.Cog):
         await ctx.edit_original_response(embed=embed)
 
 
-async def setup(bot):
+async def setup(bot: FumeTool):
     await bot.add_cog(Fun(bot))

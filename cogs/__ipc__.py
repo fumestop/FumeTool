@@ -1,27 +1,17 @@
-import json
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from discord.ext import commands
 from discord.ext.ipc import Server
 from discord.ext.ipc.objects import ClientPayload
 
+if TYPE_CHECKING:
+    from bot import FumeTool
+
 
 class IPC(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-        with open("config.json") as json_file:
-            data = json.load(json_file)
-            self.secret_key = data["secret_key"]
-            self.standard_port = data["standard_port"]
-            self.multicast_port = data["multicast_port"]
-
-        if not hasattr(bot, "ipc"):
-            bot.ipc = Server(
-                self.bot,
-                secret_key=self.secret_key,
-                standard_port=self.standard_port,
-                multicast_port=self.multicast_port,
-            )
+    def __init__(self, bot: FumeTool):
+        self.bot: FumeTool = bot
 
     async def cog_load(self):
         await self.bot.ipc.start()
@@ -84,5 +74,5 @@ class IPC(commands.Cog):
         return {"guilds": guilds}
 
 
-async def setup(bot):
+async def setup(bot: FumeTool):
     await bot.add_cog(IPC(bot))

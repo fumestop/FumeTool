@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import random
 from typing import Union
@@ -28,7 +30,7 @@ _patterns = {
 }
 
 
-def parse_cooldown(retry_after: Union[int, float]):
+def parse_cooldown(retry_after: Union[int, float]) -> tuple[int, int]:
     retry_after = int(retry_after)
 
     hours, remainder = divmod(retry_after, 3600)
@@ -37,7 +39,7 @@ def parse_cooldown(retry_after: Union[int, float]):
     return minutes, seconds
 
 
-def owo_fy(text: str):
+def owo_fy(text: str) -> str:
     for pattern, repl in _patterns.items():
         text = re.sub(pattern, repl, text)
 

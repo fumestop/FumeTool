@@ -1,23 +1,22 @@
-import json
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import string
 import random
 import traceback
-
-import asyncio
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 
+if TYPE_CHECKING:
+    from bot import FumeTool
+
+
 class Error(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-        with open("config.json") as f:
-            data = json.load(f)
-
-        self.log_channel_id = data["log_channel_id"]
+    def __init__(self, bot: FumeTool):
+        self.bot: FumeTool = bot
 
     async def cog_load(self):
         await self.global_app_command_error_handler(bot=self.bot)
@@ -75,18 +74,24 @@ class Error(commands.Cog):
                     value=f"Saved to `{file_name}`",
                 )
 
-                channel = self.bot.get_channel(self.log_channel_id)
-
-                return await channel.send(embed=embed)
+                return await self.bot.webhook.send(embed=embed)
 
             # noinspection PyUnresolvedReferences
             if ctx.response.is_done():
                 # noinspection PyUnresolvedReferences
-                await ctx.edit_original_response(content=message)
+                try:
+                    await ctx.edit_original_response(content=message, view=None)
+
+                except (discord.NotFound, discord.errors.NotFound):
+                    await ctx.followup.send(
+                        content=message, ephemeral=True, view=None
+                    )
             else:
                 # noinspection PyUnresolvedReferences
-                await ctx.response.send_message(content=message, ephemeral=True)
+                await ctx.response.send_message(
+                    content=message, ephemeral=True, view=None
+                )
 
 
-async def setup(bot):
+async def setup(bot: FumeTool):
     await bot.add_cog(Error(bot))

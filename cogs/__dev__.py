@@ -1,18 +1,19 @@
-import json
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
+from config import community_server_id
 
-with open("config.json") as json_file:
-    data = json.load(json_file)
-    community_server_id = data["community_server_id"]
+if TYPE_CHECKING:
+    from bot import FumeTool
 
 
 class Dev(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, bot: FumeTool):
+        self.bot: FumeTool = bot
 
     @app_commands.command(name="load", description="Load an extension.")
     @app_commands.guilds(community_server_id)
@@ -100,5 +101,5 @@ class Dev(commands.Cog):
         await ctx.edit_original_response(content="Synced.")
 
 
-async def setup(bot):
+async def setup(bot: FumeTool):
     await bot.add_cog(Dev(bot))
