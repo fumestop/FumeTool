@@ -24,7 +24,6 @@ class FumeTool(commands.AutoShardedBot):
     pool: aiomysql.Pool
     topggpy: topgg.DBLClient
     ipc: Server
-    launch_time: datetime
     log: logging.Logger
     user_blacklist: Config[bool]
     guild_blacklist: Config[bool]
@@ -44,7 +43,8 @@ class FumeTool(commands.AutoShardedBot):
             help_command=None,
         )
 
-        self.status_items: cycle = cycle([])
+        self._launch_time: datetime = datetime.now()
+        self._status_items: cycle = cycle([])
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
@@ -72,7 +72,7 @@ class FumeTool(commands.AutoShardedBot):
 
     @tasks.loop(minutes=15)
     async def _update_status_items(self):
-        self.status_items = cycle(
+        self._status_items = cycle(
             [
                 f"on {len(self.guilds)} servers | /help",
                 "/invite | /vote | /community",
@@ -84,11 +84,11 @@ class FumeTool(commands.AutoShardedBot):
     async def _change_status(self):
         await self.change_presence(
             status=discord.Status.online,
-            activity=discord.Game(next(self.status_items)),
+            activity=discord.Game(next(self._status_items)),
         )
 
     async def on_ready(self) -> None:
-        self.launch_time = datetime.utcnow()
+        self._launch_time = datetime.now()
 
         self._update_status_items.start()
         self._change_status.start()
@@ -118,8 +118,12 @@ class FumeTool(commands.AutoShardedBot):
     async def close(self) -> None:
         await super().close()
         await self.session.close()
+
         self.pool.close()
         await self.pool.wait_closed()
+
+        self._update_status_items.stop()
+        self._change_status.stop()
 
     @property
     def config(self):
@@ -130,13 +134,8 @@ class FumeTool(commands.AutoShardedBot):
         return self.config.embed_color
 
     @property
-    def uptime(self) -> str:
-        delta_uptime = datetime.utcnow() - self.launch_time
-        return (
-            f"{delta_uptime.days}d, {delta_uptime.seconds // 3600}h, "
-            f"{(delta_uptime.seconds // 60) % 60}m, "
-            f"{delta_uptime.seconds % 60}s"
-        )
+    def launch_time(self) -> datetime:
+        return self._launch_time
 
     @property
     def owner(self) -> discord.User:

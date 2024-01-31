@@ -6,6 +6,8 @@ from discord.ext.menus import Menu, ListPageSource
 
 import config
 
+from utils.tools import format_boolean_text
+
 
 class TagPaginatorSource(ListPageSource):
     def __init__(
@@ -44,6 +46,48 @@ class TagPaginatorSource(ListPageSource):
         embed.set_footer(
             text=f"{self.get_max_pages()} pages | {len(self.entries)} tags"
         )
+
+        return embed
+
+    def is_paginating(self):
+        return True
+
+
+class RolePaginatorSource(ListPageSource):
+    def __init__(
+        self,
+        entries: list,
+        role: discord.Role,
+        position: int,
+        per_page: Optional[int] = 1,
+    ):
+        super().__init__(entries, per_page=per_page)
+
+        self.role: discord.Role = role
+        self.position: int = position
+
+    async def format_page(self, menu: Menu, page):
+        embed = discord.Embed(color=self.role.color)
+        embed.title = f"Role Information for {self.role.name}"
+        embed.add_field(name="ID", value=self.role.id)
+        embed.add_field(name="Color", value=f"`{self.role.color}`")
+        embed.add_field(
+            name="Created",
+            value=f"<t:{int(self.role.created_at.timestamp())}:F> (<t:{int(self.role.created_at.timestamp())}:R>)",
+        )
+        embed.add_field(name="Position", value=self.position)
+        embed.add_field(name="User count", value=len(self.role.members))
+        embed.add_field(
+            name="Displayed separately",
+            value=format_boolean_text(self.role.hoist),
+        )
+        embed.add_field(
+            name="Mentionable", value=format_boolean_text(self.role.mentionable)
+        )
+
+        embed.add_field(name=page["name"], value=page["value"], inline=False)
+
+        embed.set_footer(text=f"{self.get_max_pages()} permission categories")
 
         return embed
 
