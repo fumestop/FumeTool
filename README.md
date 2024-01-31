@@ -27,7 +27,6 @@ weather_api_key = "weather_api_key"
 topgg_token = "topgg_token"
 
 initial_extensions = [
-    "cogs.__core__",
     "cogs.__dev__",
     "cogs.__error__",
     "cogs.__eval__",
@@ -42,6 +41,6 @@ initial_extensions = [
 ]
 ```
 
-`data/user_blacklist.json`: `[]`
+`data/user_blacklist.json`: `{}`
 
-`data/guild_blacklist.json`: `[]`
+`data/guild_blacklist.json`: `{}`

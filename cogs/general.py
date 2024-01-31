@@ -43,6 +43,19 @@ class General(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
+    @app_commands.command(name="uptime")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    async def _uptime(self, ctx: discord.Interaction):
+        """Shows how long has FumeTool has been up for."""
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        await ctx.edit_original_response(
+            content=f"I have been up since "
+            f"<t:{int(self.bot.launch_time.timestamp())}:F> "
+            f"(<t:{int(self.bot.launch_time.timestamp())}:R>)."
+        )
+
     @app_commands.command(name="web")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _web(self, ctx: discord.Interaction):

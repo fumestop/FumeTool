@@ -28,7 +28,7 @@ class Help(commands.Cog):
 
         embed.add_field(
             name="General",
-            value=f"`ping`, `web`, `invite`, `vote`, `review`, `community`",
+            value=f"`ping`, `uptime`, `web`, `invite`, `vote`, `review`, `community`",
             inline=False,
         )
 
@@ -40,21 +40,22 @@ class Help(commands.Cog):
 
         embed.add_field(
             name="Development",
-            value=f"`dns`, `ip`, `scan`, `screenshot`, `whois`, `dstatus`, `gstatus`, `pypi`, `npm`, "
-            f"`tts`",
+            value=f"`dns`, `whois`, `ip`, `scan`, `dstatus`, `gstatus`, `pypi`, `npm`, "
+            f"`screenshot`, `tts`",
             inline=False,
         )
 
         embed.add_field(
             name="Utility",
-            value=f"`user`, `server`, `bot`, `role`, `roles`, `steam`, `translate`, `define`, `urban`, "
-            f"`wikipedia`, `weather`, `poll`, `avatar`",
+            value=f"`avatar`, `userinfo`, `serverinfo`, `roles`, `roleinfo`, `define`, `urban`, "
+            f"`wikipedia`, `steam`, `translate`, `weather`, `poll`",
             inline=False,
         )
 
         embed.add_field(
             name="Tags",
-            value=f"`tag`, `traw`, `tadd`, `tlist`, `tedit`, `tdel`, `tclaim`, `talias`, `tinfo`, `tsearch`",
+            value=f"`tag view`, `tag raw`, `tag add`, `tag list`, `tag all`, `tag edit`, "
+            f"`tag delete`, `tag purge`, `tag claim`, `tag alias`, `tag info`, `tag search`",
             inline=False,
         )
 

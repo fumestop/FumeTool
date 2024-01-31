@@ -7,6 +7,7 @@ from contextlib import suppress
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.ext.menus.views import ViewMenuPages
 
 import httpx
 import aiohttp
@@ -17,6 +18,8 @@ from steam.enums import EPersonaState
 import googletrans
 
 from utils.cd import cooldown_level_0, cooldown_level_1
+from utils.paginators import RolePaginatorSource
+from utils.tools import format_boolean_text
 
 if TYPE_CHECKING:
     from bot import FumeTool
@@ -61,7 +64,9 @@ class Utility(commands.Cog):
         member = member or ctx.user
 
         embed = discord.Embed(colour=self.bot.embed_color)
-        embed.set_image(url=member.avatar.url)
+        embed.set_image(
+            url=member.avatar.url if member.avatar else member.default_avatar.url
+        )
 
         return await ctx.edit_original_response(embed=embed)
 
@@ -183,88 +188,6 @@ class Utility(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="roleinfo")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
-    @app_commands.guild_only()
-    async def _role_info(self, ctx: discord.Interaction, role: discord.Role):
-        """Get information about a server role.
-
-        Parameters
-        ----------
-        role : discord.Role
-            The role whose information is to be fetched.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer()
-
-        embed = discord.Embed(colour=self.bot.embed_color)
-
-        count = len(
-            [
-                member
-                for member in ctx.guild.members
-                if discord.utils.get(member.roles, name=role.name)
-            ]
-        )
-
-        perms = role.permissions
-        perm_list = (
-            "**Can kick members:** {}\n**Can ban members**: {}\n**Can change nickname:** {}"
-            "\n**Can connect to voice channels:** {}"
-            "\n**Can create instant invites:** {}\n**Can deafen members:** {}\n**Can embed links:** {}"
-            "\n**Can use external emojis:** {}\n**Can manage channel:** {}\n**Can manage emojis:** {}"
-            "\n**Can manage messages:** {}\n**Can manage nicknames:** {}"
-            "\n**Can manage roles:** {}\n**Can manage server:** {}"
-            "\n**Can mention everyone:** {}\n**Can move members:** {}\n**Can mute members:** {}"
-            "\n**Can read message history:** {}\n**Can send messages:** {}\n**Can speak:** {}"
-            "\n**Can use voice activity:** {}"
-            "\n**Can manage webhooks:** {}\n**Can add reactions:** {}\n**Can view audit logs:** {}".format(
-                perms.kick_members,
-                perms.ban_members,
-                perms.change_nickname,
-                perms.connect,
-                perms.create_instant_invite,
-                perms.deafen_members,
-                perms.embed_links,
-                perms.external_emojis,
-                perms.manage_channels,
-                perms.manage_emojis,
-                perms.manage_messages,
-                perms.manage_nicknames,
-                perms.manage_roles,
-                perms.manage_guild,
-                perms.mention_everyone,
-                perms.move_members,
-                perms.mute_members,
-                perms.read_message_history,
-                perms.send_messages,
-                perms.speak,
-                perms.use_voice_activation,
-                perms.manage_webhooks,
-                perms.add_reactions,
-                perms.view_audit_log,
-            )
-        )
-
-        perm_list = perm_list.replace("True", "Yes").replace('"', "")
-        perm_list = perm_list.replace("False", "No").replace('"', "")
-
-        created = f"<t:{int(role.created_at.timestamp())}:F> (<t:{int(role.created_at.timestamp())}:R>)"
-
-        embed.description = (
-            f"**Name:** {role.name} | {role.mention}\n**ID:** {role.id}\n**Color:** `{role.color}`"
-            f"\n**Created:** {created}"
-            f"\n**Position:** {role.position}**\nUser count:** {count}\n\n"
-            f"**Mentionable:** "
-            f"{str(role.mentionable).replace('True', 'Yes').replace('False', 'No')}"
-            f"\n**Displayed separately:** "
-            f"{str(role.hoist).replace('True', 'Yes').replace('False', 'No')}\n"
-            + perm_list
-        )
-
-        await ctx.edit_original_response(embed=embed)
-
     @app_commands.command(name="roles")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
@@ -293,207 +216,154 @@ class Utility(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="steam")
+    @app_commands.command(name="roleinfo")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
-    async def _steam(self, ctx: discord.Interaction, community_id: str):
-        """
-        Get information about a Steam user.
+    async def _role_info(self, ctx: discord.Interaction, role: discord.Role):
+        """Get information about a server role.
 
         Parameters
         ----------
-        community_id : str
-            The Steam Community ID or URL of the user.
+        role : discord.Role
+            The role whose information is to be fetched.
 
         """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer()
 
-        # noinspection PyUnresolvedReferences
-        steam_id = SteamID.from_url(f"https://steamcommunity.com/id/{community_id}")
-        steam_id = steam_id or community_id
+        permissions = role.permissions
 
-        try:
-            # noinspection PyUnresolvedReferences
-            steam_user = self.steam.ISteamUser.GetPlayerSummaries_v2(
-                steamids=steam_id
-            )["response"]["players"][0]
+        general_server_permissions = (
+            f"```\n"
+            f"View Channels: {permissions.view_channel}\n"
+            f"Manage Channels: {permissions.manage_channels}\n"
+            f"Manage Roles: {permissions.manage_roles}\n"
+            f"Create Expressions: {permissions.create_expressions}\n"
+            f"Manage Expressions: {permissions.manage_expressions}\n"
+            f"View Audit Log: {permissions.view_audit_log}\n"
+            f"View Server Insights: {permissions.view_guild_insights}\n"
+            f"Manage Webhooks: {permissions.manage_webhooks}\n"
+            f"Manage Server: {permissions.manage_guild}\n"
+            f"```"
+        )
 
-        except IndexError:
-            return await ctx.edit_original_response(
-                content="No such user found! "
-                "Make sure you are using a valid Steam Community ID/URL."
-            )
+        membership_permissions = (
+            f"```\n"
+            f"Create Invite: {permissions.create_instant_invite}\n"
+            f"Change Nickname: {permissions.change_nickname}\n"
+            f"Manage Nicknames: {permissions.manage_nicknames}\n"
+            f"Kick Members: {permissions.kick_members}\n"
+            f"Ban Members: {permissions.ban_members}\n"
+            f"Timeout Members: {permissions.moderate_members}\n"
+            f"```"
+        )
 
-        # noinspection PyUnresolvedReferences
-        bans = self.steam.ISteamUser.GetPlayerBans_v1(steamids=steam_id)["players"][
-            0
+        text_channel_permissions = (
+            f"```\n"
+            f"Send Messages: {permissions.send_messages}\n"
+            f"Send Messages in Threads: {permissions.send_messages_in_threads}\n"
+            f"Create Public Threads: {permissions.create_public_threads}\n"
+            f"Create Private Threads: {permissions.create_private_threads}\n"
+            f"Embed Links: {permissions.embed_links}\n"
+            f"Attach Files: {permissions.attach_files}\n"
+            f"Add Reactions: {permissions.add_reactions}\n"
+            f"Use External Emoji: {permissions.use_external_emojis}\n"
+            f"Use External Stickers: {permissions.use_external_stickers}\n"
+            f"Mention @everyone, @here, and All Roles: {permissions.mention_everyone}\n"
+            f"Manage Messages: {permissions.manage_messages}\n"
+            f"Manage Threads: {permissions.manage_threads}\n"
+            f"Read Message History: {permissions.read_message_history}\n"
+            f"Send Text-to-Speech Messages: {permissions.send_tts_messages}\n"
+            f"Use Application Commands: {permissions.use_application_commands}\n"
+            f"Send Voice Messages: {permissions.send_voice_messages}\n"
+            f"```"
+        )
+
+        voice_channel_permissions = (
+            f"```\n"
+            f"Connect: {permissions.connect}\n"
+            f"Speak: {permissions.speak}\n"
+            f"Video: {permissions.stream}\n"
+            f"Use Activities: {permissions.use_embedded_activities}\n"
+            f"Use Soundboard: {permissions.use_soundboard}\n"
+            f"Use External Sounds: {permissions.use_external_sounds}\n"
+            f"Use Voice Activity: {permissions.use_voice_activation}\n"
+            f"Priority Speaker: {permissions.priority_speaker}\n"
+            f"Mute Members: {permissions.mute_members}\n"
+            f"Deafen Members: {permissions.deafen_members}\n"
+            f"Move Members: {permissions.move_members}\n"
+            # f"Set Voice Channel Status: {permissions.set_voice_channel_status}\n")
+            f"```"
+        )
+
+        stage_channel_permissions = (
+            f"```\n" f"Request to Speak: {permissions.request_to_speak}\n" f"```"
+        )
+
+        events_permissions = (
+            f"```\n"
+            # f"Create Events: {permissions.create_events}\n"
+            f"Manage Events: {permissions.manage_events}\n"
+            f"```"
+        )
+        advanced_permissions = (
+            f"```\n" f"Administrator: {permissions.administrator}\n" f"```"
+        )
+
+        permissions_list = [
+            {
+                "name": "General Server Permissions",
+                "value": format_boolean_text(general_server_permissions),
+            },
+            {
+                "name": "Membership Permissions",
+                "value": format_boolean_text(membership_permissions),
+            },
+            {
+                "name": "Text Channel Permissions",
+                "value": format_boolean_text(text_channel_permissions),
+            },
+            {
+                "name": "Voice Channel Permissions",
+                "value": format_boolean_text(voice_channel_permissions),
+            },
+            {
+                "name": "Stage Channel Permissions",
+                "value": format_boolean_text(stage_channel_permissions),
+            },
+            {
+                "name": "Events Permissions",
+                "value": format_boolean_text(events_permissions),
+            },
+            {
+                "name": "Advanced Permissions",
+                "value": format_boolean_text(advanced_permissions),
+            },
         ]
 
-        vac_banned = bans["VACBanned"]
-        community_banned = bans["CommunityBanned"]
-
-        ban_info = {"VAC Banned": vac_banned, "Community Banned": community_banned}
-
-        if vac_banned:
-            ban_info["VAC Bans"] = bans["NumberOfVACBans"]
-            ban_info["Days Since Last VAC Ban"] = bans["DaysSinceLastBan"]
-
-        if steam_user["communityvisibilitystate"] != 3:
-            embed = discord.Embed(colour=self.bot.embed_color)
-
-            embed.description = "This profile is private."
-            embed.title = steam_user["personaname"]
-            embed.url = steam_user["profileurl"]
-            embed.set_thumbnail(url=steam_user["avatarfull"])
-
-            for _key, _value in ban_info.items():
-                embed.add_field(name=_key, value=_value, inline=True)
-
-            return await ctx.edit_original_response(embed=embed)
-
-        # noinspection PyUnresolvedReferences
-        group_count = len(
-            self.steam.ISteamUser.GetUserGroupList_v1(steamid=steam_id)["response"][
-                "groups"
-            ]
-        )
-
-        try:
-            async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=10)
-            ) as session:
-                async with session.get(
-                    f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/"
-                    f"?key={self.bot.config.steam_api_key}&steamid={steam_id}"
-                    f"&include_played_free_games=1%format=json"
-                ) as res:
-                    games = await res.json()
-                    games = games["response"]
-
-        except asyncio.TimeoutError:
-            pass
-
-        try:
-            games_played = games["game_count"]
-
-        except KeyError:
-            games_played = 0
-
-        state = EPersonaState(steam_user["personastate"]).name
-        game_name = None
-
-        if "gameid" in steam_user.keys():
-            state = "In-game"
-            game_id = steam_user["gameid"]
-
-            try:
-                async with aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=10)
-                ) as session:
-                    async with session.get(
-                        f"https://store.steampowered.com/api/appdetails?appids={game_id}"
-                    ) as res:
-                        game_name = await res.json()
-                        game_name = game_name[game_id]["data"]["name"]
-
-            except asyncio.TimeoutError:
-                pass
-
-        last_online = None
-
-        try:
-            last_online = f"<t:{steam_user['lastlogoff']}:R>"
-
-        except KeyError:
-            pass
-
-        creation_date = (
-            f"<t:{steam_user['timecreated']}:F> (<t:{steam_user['timecreated']}:R>)"
-        )
-
-        fields = {
-            "Status": state,
-            "Created on": creation_date,
-            "Group Count": group_count,
-            "Games Owned": games_played,
-        }
-
-        if state == EPersonaState.Offline.name:
-            if last_online is not None:
-                fields["Last Online"] = last_online
-
-        if game_name:
-            fields["Currently Playing"] = game_name
-
-        fields.update(ban_info)
-
-        embed = discord.Embed(colour=self.bot.embed_color)
-
-        embed.title = steam_user["personaname"]
-        embed.colour = self.bot.embed_color
-        embed.url = steam_user["profileurl"]
-        embed.set_thumbnail(url=steam_user["avatarfull"])
-
-        for _key, _value in fields.items():
-            embed.add_field(name=_key, value=_value, inline=True)
-
-        await ctx.edit_original_response(embed=embed)
-
-    @app_commands.command(name="translate")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
-    @app_commands.guild_only()
-    async def _translate(self, ctx: discord.Interaction, language: str, text: str):
-        """
-        Translate text from one language into another.
-
-        Parameters
-        ----------
-        language : str
-            The language to translate the text into. Must be a valid ISO 639-1 language code.
-        text : str
-            The text to translate.
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer()
-
-        translator = googletrans.Translator(timeout=httpx.Timeout(10.0))
-
-        try:
-            translation = translator.translate(text, dest=language)
-
-        except ValueError:
-            return await ctx.edit_original_response(
-                content="Either an invalid or unsupported language was specified."
+        pages = RolePaginatorSource(
+            entries=permissions_list,
+            role=role,
+            position=sorted([role for role in ctx.guild.roles], reverse=True).index(
+                role
             )
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.title = "Translation"
-        embed.description = translation.text
-
-        embed.add_field(
-            name="Detected Language",
-            value=googletrans.LANGUAGES[translation.src].capitalize(),
+            + 1,
         )
-        embed.add_field(
-            name="Target Language",
-            value=googletrans.LANGUAGES[translation.dest].capitalize(),
+        paginator = ViewMenuPages(
+            source=pages,
+            timeout=None,
+            delete_message_after=False,
+            clear_reactions_after=True,
         )
-        if translation.extra_data["confidence"]:
-            embed.add_field(
-                name="Confidence",
-                value=f"{translation.extra_data['confidence'] * 100}%",
-            )
-        embed.add_field(name="Pronunciation", value=translation.pronunciation)
 
-        await ctx.edit_original_response(embed=embed)
+        await ctx.edit_original_response(content="\U0001F44C")
+        await paginator.start(ctx)
 
     @app_commands.command(name="define")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
     async def _define(self, ctx: discord.Interaction, word: str):
-        """
-        Get the definition of a word.
+        """Get the definition of a word.
 
         Parameters
         ----------
@@ -565,8 +435,7 @@ class Utility(commands.Cog):
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
     async def _urban(self, ctx: discord.Interaction, word: str):
-        """
-        Get the definition of a word from Urban Dictionary.
+        """Get the definition of a word from Urban Dictionary.
 
         Parameters
         ----------
@@ -624,8 +493,7 @@ class Utility(commands.Cog):
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     @app_commands.guild_only()
     async def _wikipedia(self, ctx: discord.Interaction, query: str):
-        """
-        Get the summary of a Wikipedia article.
+        """Get the summary of a Wikipedia article.
 
         Parameters
         ----------
@@ -645,7 +513,209 @@ class Utility(commands.Cog):
         embed = discord.Embed(colour=self.bot.embed_color)
         embed.title = page.title
         embed.url = page.fullurl
-        embed.description = page.summary + f"\n\n[**Read More**]({page.fullurl})"
+        embed.description = page.summary + f"\n\n[Read More]({page.fullurl})"
+
+        await ctx.edit_original_response(embed=embed)
+
+    @app_commands.command(name="steam")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    @app_commands.guild_only()
+    async def _steam(self, ctx: discord.Interaction, community_id: str):
+        """Get information about a Steam user.
+
+        Parameters
+        ----------
+        community_id : str
+            The Steam Community ID or URL of the user.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer()
+
+        # noinspection PyUnresolvedReferences
+        steam_id = SteamID.from_url(f"https://steamcommunity.com/id/{community_id}")
+        steam_id = steam_id or community_id
+
+        try:
+            # noinspection PyUnresolvedReferences
+            steam_user = self.steam.ISteamUser.GetPlayerSummaries_v2(
+                steamids=steam_id
+            )["response"]["players"][0]
+
+        except IndexError:
+            return await ctx.edit_original_response(
+                content="No such user found! "
+                "Make sure you are using a valid Steam Community ID/URL."
+            )
+
+        # noinspection PyUnresolvedReferences
+        bans = self.steam.ISteamUser.GetPlayerBans_v1(steamids=steam_id)["players"][
+            0
+        ]
+
+        if steam_user["communityvisibilitystate"] != 3:
+            embed = discord.Embed(colour=self.bot.embed_color)
+
+            embed.description = "This profile is private."
+            embed.title = steam_user["personaname"]
+            embed.url = steam_user["profileurl"]
+            embed.set_thumbnail(url=steam_user["avatarfull"])
+
+            embed.add_field(
+                name="VAC Banned", value=format_boolean_text(bans["VACBanned"])
+            )
+            embed.add_field(
+                name="Community Banned",
+                value=format_boolean_text(bans["CommunityBanned"]),
+            )
+
+            if bans["VACBanned"]:
+                embed.add_field(name="VAC Bans", value=bans["NumberOfVACBans"])
+                embed.add_field(
+                    name="Days Since Last VAC Ban", value=bans["DaysSinceLastBan"]
+                )
+
+            return await ctx.edit_original_response(embed=embed)
+
+        # noinspection PyUnresolvedReferences
+        group_count = len(
+            self.steam.ISteamUser.GetUserGroupList_v1(steamid=steam_id)["response"][
+                "groups"
+            ]
+        )
+
+        try:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as session:
+                async with session.get(
+                    f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/"
+                    f"?key={self.bot.config.steam_api_key}&steamid={steam_id}"
+                    f"&include_played_free_games=1%format=json"
+                ) as res:
+                    games = await res.json()
+                    games = games["response"]
+
+        except asyncio.TimeoutError:
+            pass
+
+        try:
+            games_owned = games["game_count"]
+
+        except KeyError:
+            games_owned = 0
+
+        state = EPersonaState(steam_user["personastate"]).name
+        game_name = None
+
+        if "gameid" in steam_user.keys():
+            state = "In-game"
+            game_id = steam_user["gameid"]
+
+            try:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as session:
+                    async with session.get(
+                        f"https://store.steampowered.com/api/appdetails?appids={game_id}"
+                    ) as res:
+                        game_name = await res.json()
+                        game_name = game_name[game_id]["data"]["name"]
+
+            except asyncio.TimeoutError:
+                pass
+
+        last_online = None
+
+        try:
+            last_online = f"<t:{steam_user['lastlogoff']}:R>"
+
+        except KeyError:
+            pass
+
+        creation_date = (
+            f"<t:{steam_user['timecreated']}:F> (<t:{steam_user['timecreated']}:R>)"
+        )
+
+        embed = discord.Embed(colour=self.bot.embed_color)
+
+        embed.title = steam_user["personaname"]
+        embed.colour = self.bot.embed_color
+        embed.url = steam_user["profileurl"]
+        embed.set_thumbnail(url=steam_user["avatarfull"])
+
+        embed.add_field(
+            name="VAC Banned", value=format_boolean_text(bans["VACBanned"])
+        )
+        embed.add_field(
+            name="Community Banned",
+            value=format_boolean_text(bans["CommunityBanned"]),
+        )
+
+        if bans["VACBanned"]:
+            embed.add_field(name="VAC Bans", value=bans["NumberOfVACBans"])
+            embed.add_field(
+                name="Days Since Last VAC Ban", value=bans["DaysSinceLastBan"]
+            )
+
+        embed.add_field(name="Status", value=state)
+        embed.add_field(name="Created on", value=creation_date)
+        embed.add_field(name="Group Count", value=group_count)
+        embed.add_field(name="Games Owned", value=games_owned)
+
+        if state == EPersonaState.Offline.name:
+            if last_online is not None:
+                embed.add_field(name="Last Online", value=last_online)
+
+        if game_name:
+            embed.add_field(name="Currently Playing", value=game_name)
+
+        await ctx.edit_original_response(embed=embed)
+
+    @app_commands.command(name="translate")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
+    @app_commands.guild_only()
+    async def _translate(self, ctx: discord.Interaction, language: str, text: str):
+        """Translate text from one language into another.
+
+        Parameters
+        ----------
+        language : str
+            The language to translate the text into. Must be a valid ISO 639-1 language code.
+        text : str
+            The text to translate.
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer()
+
+        translator = googletrans.Translator(timeout=httpx.Timeout(10.0))
+
+        try:
+            translation = translator.translate(text, dest=language)
+
+        except ValueError:
+            return await ctx.edit_original_response(
+                content="Either an invalid or unsupported language was specified."
+            )
+
+        embed = discord.Embed(color=self.bot.embed_color)
+        embed.title = "Translation"
+        embed.description = translation.text
+
+        embed.add_field(
+            name="Detected Language",
+            value=googletrans.LANGUAGES[translation.src].capitalize(),
+        )
+        embed.add_field(
+            name="Target Language",
+            value=googletrans.LANGUAGES[translation.dest].capitalize(),
+        )
+        if translation.extra_data["confidence"]:
+            embed.add_field(
+                name="Confidence",
+                value=f"{translation.extra_data['confidence'] * 100}%",
+            )
+        embed.add_field(name="Pronunciation", value=translation.pronunciation)
 
         await ctx.edit_original_response(embed=embed)
 
@@ -671,8 +741,7 @@ class Utility(commands.Cog):
         temperature_scale: app_commands.Choice[str] = None,
         speed_scale: app_commands.Choice[str] = None,
     ):
-        """
-        Get the weather report for a city.
+        """Get the weather report for a city.
 
         Parameters
         ----------
@@ -804,8 +873,7 @@ class Utility(commands.Cog):
         choices: str,
         channel: Optional[discord.TextChannel] = None,
     ):
-        """
-        Create a poll.
+        """Create a poll.
 
         Parameters
         ----------

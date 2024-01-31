@@ -44,3 +44,10 @@ def owo_fy(text: str) -> str:
         text = re.sub(pattern, repl, text)
 
     return random.choice(_faces) + "\n" + f"```css\n{text}\n```"
+
+
+def format_boolean_text(text: Union[str, bool]) -> str:
+    if isinstance(text, bool):
+        return "Yes" if text else "No"
+
+    return text.replace("True", "Yes").replace("False", "No")

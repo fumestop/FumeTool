@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import asyncio
 import random
@@ -41,6 +41,374 @@ class Development(commands.Cog):
             "Partial Outage": "\U0001F7E2",
             "Major Outage": "\U0001F534",
         }
+
+    @app_commands.command(name="dns")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
+    @app_commands.guild_only()
+    @app_commands.choices(
+        record=[
+            app_commands.Choice(name="All records", value="*"),
+            app_commands.Choice(name="A", value="A"),
+            app_commands.Choice(name="AAAA", value="AAAA"),
+            app_commands.Choice(name="CNAME", value="CNAME"),
+            app_commands.Choice(name="MX", value="MX"),
+            app_commands.Choice(name="NS", value="NS"),
+            app_commands.Choice(name="PTR", value="PTR"),
+            app_commands.Choice(name="SOA", value="SOA"),
+            app_commands.Choice(name="SRV", value="SRV"),
+            app_commands.Choice(name="TXT", value="TXT"),
+        ]
+    )
+    async def _dns(
+        self,
+        ctx: discord.Interaction,
+        domain: str,
+        record: Optional[app_commands.Choice[str]] = None,
+    ):
+        """Looks up the various DNS records of a domain.
+
+        Parameters
+        ----------
+        domain : str
+            The domain to look up.
+        record : Optional[app_commands.Choice[str]]
+            The type  of record to look up.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        record = record or app_commands.Choice(name="All records", value="*")
+
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.title = "DNS Lookup"
+
+        field = "```css\n"
+
+        embed.add_field(name="Domain", value=f"`{domain}`")
+        embed.add_field(name="Record Type", value=f"`{record.name}`")
+
+        try:
+            if record.value != "*":
+                try:
+                    answers = resolver.resolve(domain, record.value)
+
+                    for _data in answers:
+                        field += f"{_data.to_text()}\n"
+
+                except resolver.NoAnswer:
+                    field += f"No {record.value} record found.\n"
+
+                except resolver.NoNameservers:
+                    field += f"No {record.value} record found.\n"
+
+                except resolver.Timeout:
+                    return await ctx.edit_original_response(
+                        content="The DNS operation timed out."
+                    )
+
+                finally:
+                    embed.add_field(
+                        name="Records", value=f"{field}```", inline=False
+                    )
+
+            else:
+                for _record in [
+                    "A",
+                    "AAAA",
+                    "CNAME",
+                    "MX",
+                    "NS",
+                    "PTR",
+                    "SOA",
+                    "SRV",
+                    "TXT",
+                ]:
+                    try:
+                        answers = resolver.resolve(domain, _record)
+                        for r_data in answers:
+                            field += f"{_record} : {r_data.to_text()}\n"
+
+                    except resolver.NoAnswer:
+                        field += f"No `{_record}` record found\n"
+
+                    except resolver.NoNameservers:
+                        field += f"No `{_record}` record found.\n"
+
+                    except resolver.Timeout:
+                        await ctx.edit_original_response(
+                            content="The DNS operation timed out."
+                        )
+
+                embed.add_field(name="Records", value=f"{field}```", inline=False)
+
+        except resolver.NXDOMAIN:
+            return await ctx.edit_original_response(
+                content=f"Couldn't resolve host : `{domain}`"
+            )
+
+        await ctx.edit_original_response(embed=embed)
+
+    @app_commands.command(name="whois")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
+    @app_commands.guild_only()
+    async def _whois(self, ctx: discord.Interaction, domain: str):
+        """Retrieves a domain's information from the WHOIS database.
+
+        Parameters
+        ----------
+        domain : str
+            The domain to look up.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        if not validators.domain(domain):
+            return await ctx.edit_original_response(
+                content=f"`{domain}` is not a valid domain."
+            )
+
+        try:
+            dm_info = whois.whois(domain)
+
+        except whois.parser.PywhoisError:
+            return await ctx.edit_original_response(
+                content=f"`{domain}` is not registered."
+            )
+
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.title = "WHOIS Lookup"
+
+        domains = (
+            "\n".join(dm_info["domain_name"])
+            if isinstance(dm_info["domain_name"], list)
+            else dm_info["domain_name"]
+        )
+        embed.add_field(name="Domain(s)", value=f"```css\n{domains}```")
+
+        embed.add_field(name="Registrar", value=dm_info["registrar"])
+
+        with suppress(KeyError):
+            embed.add_field(name="WHOIS Server", value=dm_info["whois_server"])
+
+        with suppress(AttributeError):
+            creation_date = (
+                dm_info["creation_date"][0]
+                if isinstance(dm_info["creation_date"], list)
+                else dm_info["creation_date"]
+            )
+            embed.add_field(
+                name="Creation Date",
+                value=f"<t:{int(creation_date.timestamp())}:F> (<t:{int(creation_date.timestamp())}:R>)",
+            )
+
+        with suppress(AttributeError):
+            expiration_date = (
+                dm_info["expiration_date"][0]
+                if isinstance(dm_info["expiration_date"], list)
+                else dm_info["expiration_date"]
+            )
+            embed.add_field(
+                name="Expiration Date",
+                value=f"<t:{int(expiration_date.timestamp())}:F> (<t:{int(expiration_date.timestamp())}:R>)",
+            )
+
+        with suppress(AttributeError):
+            updated_date = (
+                dm_info["updated_date"][0]
+                if isinstance(dm_info["updated_date"], list)
+                else dm_info["updated_date"]
+            )
+            embed.add_field(
+                name="Updated Date",
+                value=f"<t:{int(updated_date.timestamp())}:F> (<t:{int(updated_date.timestamp())}:R>)",
+            )
+
+        with suppress(KeyError):
+            emails = (
+                "\n".join(dm_info["emails"])
+                if isinstance(dm_info["emails"], list)
+                else "None"
+            )
+            embed.add_field(name="Emails", value=f"```css\n{emails}```")
+
+        with suppress(KeyError):
+            embed.add_field(name="DNSSEC", value=dm_info["dnssec"])
+        with suppress(KeyError):
+            embed.add_field(name="Organization", value=dm_info["org"])
+        with suppress(KeyError):
+            embed.add_field(name="Address", value=dm_info["address"])
+        with suppress(KeyError):
+            embed.add_field(name="City", value=dm_info["city"])
+        with suppress(KeyError):
+            embed.add_field(name="State", value=dm_info["state"])
+        with suppress(KeyError):
+            embed.add_field(name="Country", value=dm_info["country"])
+        with suppress(KeyError):
+            embed.add_field(
+                name="Postal Code", value=dm_info["registrant_postal_code"]
+            )
+
+        with suppress(KeyError):
+            nameservers = (
+                "\n".join(dm_info["name_servers"])
+                if isinstance(dm_info["name_servers"], list)
+                else dm_info["name_servers"]
+            )
+            embed.add_field(name="Nameservers", value=f"```css\n{nameservers}```")
+
+        await ctx.edit_original_response(embed=embed)
+
+    @app_commands.command(name="ip")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
+    @app_commands.guild_only()
+    async def _ip(self, ctx: discord.Interaction, address: str):
+        """Retrieves various information about an IP address.
+
+        Parameters
+        ----------
+        address : str
+            The IP address to look up.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        if not validators.ip_address.ipv4(address, cidr=False):
+            if not validators.ip_address.ipv6(address, cidr=False):
+                return await ctx.edit_original_response(
+                    content=f"`{address}` is not a valid IP address."
+                )
+
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
+            async with session.get(f"https://ipinfo.io/{address}/json") as res:
+                if res.status == 200:
+                    res = await res.json()
+
+                    if "bogon" in res:
+                        return await ctx.edit_original_response(
+                            content="This IP is reserved for special use."
+                        )
+
+                    else:
+                        embed = discord.Embed(colour=self.bot.embed_color)
+                        embed.title = f"IP Lookup - {res['ip']}"
+                        embed.url = f"https://ipinfo.io/{res['ip']}"
+
+                        with suppress(KeyError):
+                            embed.add_field(
+                                name="Hostname", value="`" + res["hostname"] + "`"
+                            )
+
+                        with suppress(KeyError):
+                            embed.add_field(name="Organization", value=res["org"])
+
+                        with suppress(KeyError):
+                            embed.add_field(
+                                name="Anycast",
+                                value="Yes" if res["anycast"] else "No",
+                            )
+
+                        with suppress(KeyError):
+                            embed.add_field(name="Co-ordinates", value=res["loc"])
+
+                        with suppress(KeyError):
+                            embed.add_field(
+                                name="Location",
+                                value=f"{res['city']}, {res['region']}, {res['country']}",
+                            )
+
+                        with suppress(KeyError):
+                            embed.add_field(name="Postal", value=res["postal"])
+
+                        with suppress(KeyError):
+                            embed.add_field(
+                                name="Timezone",
+                                value=res["timezone"].replace("_", " "),
+                            )
+
+                        await ctx.edit_original_response(embed=embed)
+
+                elif res.status in [404, 400]:
+                    return await ctx.edit_original_response(
+                        content="Please enter a valid IP."
+                    )
+
+                else:
+                    return await ctx.edit_original_response(
+                        content="A API-side error occurred while processing "
+                        "your request. Please try again later."
+                    )
+
+    @app_commands.command(name="scan")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
+    @app_commands.guild_only()
+    async def _scan(self, ctx: discord.Interaction, host: str, port: int):
+        """Scans a particular port on a host.
+
+        Parameters
+        ----------
+        host : str
+            The host to scan.
+        port : int
+            The port to scan.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        if host in ["localhost", "0.0.0.0", "127.0.0.1"]:
+            return await ctx.edit_original_response(
+                content="\U000026a0 That host is forbidden."
+            )
+
+        if not validators.hostname(
+            host,
+            skip_ipv4_addr=False,
+            skip_ipv6_addr=False,
+            may_have_port=False,
+            maybe_simple=False,
+        ):
+            return await ctx.edit_original_response(
+                content=f"`{host}` is not a valid host."
+            )
+
+        if port not in range(0, 65536):
+            return await ctx.edit_original_response(
+                content=f"`{port}` is not a valid port. Valid ports are from `0` to `65535`."
+            )
+
+        try:
+            host = socket.gethostbyname(host)
+
+        except socket.gaierror:
+            return await ctx.edit_original_response(
+                content=f"Couldn't resolve host : `{host}`"
+            )
+
+        try:
+            _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            _socket.settimeout(10)
+
+            res = _socket.connect_ex((host, port))
+
+            if res == 0:
+                await ctx.edit_original_response(
+                    content=f"Port `{port}` on `{host}` is **OPEN**."
+                )
+
+            else:
+                await ctx.edit_original_response(
+                    content=f"Port `{port}` on `{host}` is **CLOSED**."
+                )
+
+        except socket.gaierror:
+            return await ctx.edit_original_response(
+                content=f"`{host}` is not a valid address."
+            )
 
     @app_commands.command(name="dstatus")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
@@ -211,365 +579,6 @@ class Development(commands.Cog):
 
         await ctx.edit_original_response(embed=embed)
 
-    @app_commands.command(name="dns")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
-    @app_commands.guild_only()
-    @app_commands.choices(
-        record=[
-            app_commands.Choice(name="All records", value="*"),
-            app_commands.Choice(name="A", value="A"),
-            app_commands.Choice(name="AAAA", value="AAAA"),
-            app_commands.Choice(name="CNAME", value="CNAME"),
-            app_commands.Choice(name="MX", value="MX"),
-            app_commands.Choice(name="NS", value="NS"),
-            app_commands.Choice(name="PTR", value="PTR"),
-            app_commands.Choice(name="SOA", value="SOA"),
-            app_commands.Choice(name="SRV", value="SRV"),
-            app_commands.Choice(name="TXT", value="TXT"),
-        ]
-    )
-    async def _dns(
-        self, ctx: discord.Interaction, record: app_commands.Choice[str], domain: str
-    ):
-        """Looks up the various DNS records of a domain.
-
-        Parameters
-        ----------
-        record : app_commands.Choice[str]
-            The record type to look up.
-        domain : str
-            The domain to look up.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        embed = discord.Embed(colour=self.bot.embed_color)
-        embed.title = "DNS Lookup"
-
-        field = "```css\n"
-
-        embed.add_field(name="Domain", value=f"`{domain}`", inline=False)
-        embed.add_field(name="Record Type", value=f"`{record.name}`", inline=False)
-
-        try:
-            if record.value != "*":
-                try:
-                    answers = resolver.resolve(domain, record.value)
-
-                    for _data in answers:
-                        field += f"{_data.to_text()}\n"
-
-                except resolver.NoAnswer:
-                    field += f"No {record.value} record found.\n"
-
-                except resolver.NoNameservers:
-                    field += f"No {record.value} record found.\n"
-
-                except resolver.Timeout:
-                    return await ctx.edit_original_response(
-                        content="The DNS operation timed out."
-                    )
-
-                finally:
-                    embed.add_field(
-                        name="Records", value=f"{field}```", inline=False
-                    )
-
-            else:
-                for _record in [
-                    "A",
-                    "AAAA",
-                    "CNAME",
-                    "MX",
-                    "NS",
-                    "PTR",
-                    "SOA",
-                    "SRV",
-                    "TXT",
-                ]:
-                    try:
-                        answers = resolver.resolve(domain, _record)
-                        for r_data in answers:
-                            field += f"{_record} : {r_data.to_text()}\n"
-
-                    except resolver.NoAnswer:
-                        field += f"No `{_record}` record found\n"
-
-                    except resolver.NoNameservers:
-                        field += f"No `{_record}` record found.\n"
-
-                    except resolver.Timeout:
-                        await ctx.edit_original_response(
-                            content="The DNS operation timed out."
-                        )
-
-                embed.add_field(name="Records", value=f"{field}```", inline=False)
-
-        except resolver.NXDOMAIN:
-            return await ctx.edit_original_response(
-                content=f"Couldn't resolve host : `{domain}`"
-            )
-
-        await ctx.edit_original_response(embed=embed)
-
-    @app_commands.command(name="scan")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
-    @app_commands.guild_only()
-    async def _scan(self, ctx: discord.Interaction, host: str, port: int):
-        """Scans a particular port on a host.
-
-        Parameters
-        ----------
-        host : str
-            The host to scan.
-        port : int
-            The port to scan.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        if host in ["localhost", "0.0.0.0", "127.0.0.1"]:
-            return await ctx.edit_original_response(
-                content="\U000026a0 That host is forbidden."
-            )
-
-        if not validators.hostname(
-            host,
-            skip_ipv4_addr=False,
-            skip_ipv6_addr=False,
-            may_have_port=False,
-            maybe_simple=False,
-        ):
-            return await ctx.edit_original_response(
-                content=f"`{host}` is not a valid host."
-            )
-
-        if port not in range(0, 65536):
-            return await ctx.edit_original_response(
-                content=f"`{port}` is not a valid port. Valid ports are from `0` to `65535`."
-            )
-
-        try:
-            host = socket.gethostbyname(host)
-
-        except socket.gaierror:
-            return await ctx.edit_original_response(
-                content=f"Couldn't resolve host : `{host}`"
-            )
-
-        try:
-            _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            _socket.settimeout(10)
-
-            res = _socket.connect_ex((host, port))
-
-            if res == 0:
-                await ctx.edit_original_response(
-                    content=f"Port `{port}` on `{host}` is **OPEN**."
-                )
-
-            else:
-                await ctx.edit_original_response(
-                    content=f"Port `{port}` on `{host}` is **CLOSED**."
-                )
-
-        except socket.gaierror:
-            return await ctx.edit_original_response(
-                content=f"`{host}` is not a valid address."
-            )
-
-    @app_commands.command(name="whois")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
-    @app_commands.guild_only()
-    async def _whois(self, ctx: discord.Interaction, domain: str):
-        """Retrieves a domain's information from the WHOIS database.
-
-        Parameters
-        ----------
-        domain : str
-            The domain to look up.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        if not validators.domain(domain):
-            return await ctx.edit_original_response(
-                content=f"`{domain}` is not a valid domain."
-            )
-
-        try:
-            dm_info = whois.whois(domain)
-
-        except whois.parser.PywhoisError:
-            return await ctx.edit_original_response(
-                content=f"`{domain}` is not registered."
-            )
-
-        embed = discord.Embed(colour=self.bot.embed_color)
-        embed.title = "WHOIS Lookup"
-
-        domains = (
-            "\n".join(dm_info["domain_name"])
-            if isinstance(dm_info["domain_name"], list)
-            else dm_info["domain_name"]
-        )
-        embed.add_field(name="Domain(s)", value=f"```css\n{domains}```")
-
-        embed.add_field(name="Registrar", value=dm_info["registrar"])
-
-        with suppress(KeyError):
-            embed.add_field(name="WHOIS Server", value=dm_info["whois_server"])
-
-        creation_date = (
-            dm_info["creation_date"][0]
-            if isinstance(dm_info["creation_date"], list)
-            else dm_info["creation_date"]
-        )
-        embed.add_field(
-            name="Creation Date",
-            value=f"<t:{int(creation_date.timestamp())}:F> (<t:{int(creation_date.timestamp())}:R>)",
-        )
-
-        expiration_date = (
-            dm_info["expiration_date"][0]
-            if isinstance(dm_info["expiration_date"], list)
-            else dm_info["expiration_date"]
-        )
-        embed.add_field(
-            name="Expiration Date",
-            value=f"<t:{int(expiration_date.timestamp())}:F> (<t:{int(expiration_date.timestamp())}:R>)",
-        )
-
-        updated_date = (
-            dm_info["updated_date"][0]
-            if isinstance(dm_info["updated_date"], list)
-            else dm_info["updated_date"]
-        )
-        embed.add_field(
-            name="Updated Date",
-            value=f"<t:{int(updated_date.timestamp())}:F> (<t:{int(updated_date.timestamp())}:R>)",
-        )
-
-        with suppress(KeyError):
-            emails = (
-                "\n".join(dm_info["emails"])
-                if isinstance(dm_info["emails"], list)
-                else "None"
-            )
-            embed.add_field(name="Emails", value=f"```css\n{emails}```")
-
-        with suppress(KeyError):
-            embed.add_field(name="DNSSEC", value=dm_info["dnssec"])
-        with suppress(KeyError):
-            embed.add_field(name="Organization", value=dm_info["org"])
-        with suppress(KeyError):
-            embed.add_field(name="Address", value=dm_info["address"])
-        with suppress(KeyError):
-            embed.add_field(name="City", value=dm_info["city"])
-        with suppress(KeyError):
-            embed.add_field(name="State", value=dm_info["state"])
-        with suppress(KeyError):
-            embed.add_field(name="Country", value=dm_info["country"])
-        with suppress(KeyError):
-            embed.add_field(
-                name="Postal Code", value=dm_info["registrant_postal_code"]
-            )
-
-        nameservers = (
-            "\n".join(dm_info["name_servers"])
-            if isinstance(dm_info["name_servers"], list)
-            else dm_info["name_servers"]
-        )
-        embed.add_field(name="Nameservers", value=f"```css\n{nameservers}```")
-
-        await ctx.edit_original_response(embed=embed)
-
-    @app_commands.command(name="ip")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_1)
-    @app_commands.guild_only()
-    async def _ip(self, ctx: discord.Interaction, address: str):
-        """Retrieves various information about an IP address.
-
-        Parameters
-        ----------
-        address : str
-            The IP address to look up.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        if not validators.ip_address.ipv4(address, cidr=False):
-            if not validators.ip_address.ipv6(address, cidr=False):
-                return await ctx.edit_original_response(
-                    content=f"`{address}` is not a valid IP address."
-                )
-
-        async with aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=10)
-        ) as session:
-            async with session.get(f"https://ipinfo.io/{address}/json") as res:
-                if res.status == 200:
-                    res = await res.json()
-
-                    if "bogon" in res:
-                        return await ctx.edit_original_response(
-                            content="This IP is reserved for special use."
-                        )
-
-                    else:
-                        embed = discord.Embed(colour=self.bot.embed_color)
-                        embed.title = f"IP Lookup - {res['ip']}"
-                        embed.url = f"https://ipinfo.io/{res['ip']}"
-
-                        with suppress(KeyError):
-                            embed.add_field(
-                                name="Hostname", value="`" + res["hostname"] + "`"
-                            )
-
-                        with suppress(KeyError):
-                            embed.add_field(name="Organization", value=res["org"])
-
-                        with suppress(KeyError):
-                            embed.add_field(
-                                name="Anycast",
-                                value="Yes" if res["anycast"] else "No",
-                            )
-
-                        with suppress(KeyError):
-                            embed.add_field(name="Co-ordinates", value=res["loc"])
-
-                        with suppress(KeyError):
-                            embed.add_field(
-                                name="Location",
-                                value=f"{res['city']}, {res['region']}, {res['country']}",
-                            )
-
-                        with suppress(KeyError):
-                            embed.add_field(name="Postal", value=res["postal"])
-
-                        with suppress(KeyError):
-                            embed.add_field(
-                                name="Timezone",
-                                value=res["timezone"].replace("_", " "),
-                            )
-
-                        await ctx.edit_original_response(embed=embed)
-
-                elif res.status in [404, 400]:
-                    return await ctx.edit_original_response(
-                        content="Please enter a valid IP."
-                    )
-
-                else:
-                    return await ctx.edit_original_response(
-                        content="A API-side error occurred while processing "
-                        "your request. Please try again later."
-                    )
-
     @app_commands.command(name="pypi")
     @app_commands.checks.dynamic_cooldown(cooldown_level_1)
     @app_commands.guild_only()
@@ -736,8 +745,8 @@ class Development(commands.Cog):
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as session:
                 async with session.get(
-                    f"https://image.thum.io/get{style.value.replace('_', '/')}/width/1000/crop/"
-                    f"1000/maxAge/0/noanimate/{url}"
+                    f"https://image.thum.io/get/width/1000/crop/1000/maxAge/0/"
+                    f"noanimate{style.value.replace('_', '/')}/{url}"
                 ) as res:
                     img = Image.open(BytesIO(await res.read()))
 
