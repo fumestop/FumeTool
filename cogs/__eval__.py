@@ -13,7 +13,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import community_server_id
+from config import COMMUNITY_GUILD_ID
 from utils.modals import EvalModal, ExecModal
 
 if TYPE_CHECKING:
@@ -26,12 +26,13 @@ class Evaluate(commands.Cog):
 
     # noinspection PyBroadException
     @app_commands.command(name="eval")
-    @app_commands.guilds(community_server_id)
+    @app_commands.guilds(COMMUNITY_GUILD_ID)
     async def _eval(self, ctx: discord.Interaction):
+        """Evaluate a block of Python code."""
         if self.bot.owner != ctx.user:
             # noinspection PyUnresolvedReferences
             await ctx.response.send_message(
-                content="Sorry, this is an owner(s) only command!"
+                content="Sorry, this is an owner only command!"
             )
 
         modal = EvalModal()
@@ -154,12 +155,13 @@ class Evaluate(commands.Cog):
                         )
 
     @app_commands.command(name="exec")
-    @app_commands.guilds(community_server_id)
+    @app_commands.guilds(COMMUNITY_GUILD_ID)
     async def _exec(self, ctx: discord.Interaction):
+        """Execute a shell command."""
         if self.bot.owner != ctx.user:
             # noinspection PyUnresolvedReferences
             await ctx.response.send_message(
-                content="Sorry, this is an owner(s) only command!"
+                content="Sorry, this is an owner only command!"
             )
 
         modal = ExecModal()

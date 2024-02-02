@@ -136,6 +136,68 @@ class Tags(
             content="This tag has been added!"
         )
 
+    @app_commands.command(name="alias")
+    @app_commands.rename(tag_name="name")
+    @app_commands.rename(alias_name="alias")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    async def _tag_alias(
+        self, ctx: discord.Interaction, tag_name: str, alias_name: str
+    ):
+        """Add an alias for a pre-existing tag.
+
+        Parameters
+        ----------
+        tag_name : str
+            The name of the tag to add an alias for.
+        alias_name : str
+            The name of the alias to add.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        if not await get_tag(
+            self.bot.pool, guild_id=ctx.guild.id, name=tag_name, check_alias=False
+        ):
+            return await ctx.edit_original_response(
+                content="No such tag found for this server."
+            )
+
+        if (
+            len(
+                await get_tag_aliases(
+                    self.bot.pool, guild_id=ctx.guild.id, name=tag_name
+                )
+            )
+            == 5
+        ):
+            return await ctx.edit_original_response(
+                content="Sorry, a tag cannot have more than **5** aliases."
+            )
+
+        if await get_tag(
+            self.bot.pool, guild_id=ctx.guild.id, name=alias_name
+        ) or await is_alias(self.bot.pool, guild_id=ctx.guild.id, alias=alias_name):
+            return await ctx.edit_original_response(
+                content="This alias is already in use."
+            )
+
+        if "," in alias_name:
+            return await ctx.edit_original_response(
+                content="Alias names cannot have commas."
+            )
+
+        if len(alias_name) > 100:
+            return await ctx.edit_original_response(
+                content="Tag aliases cannot be more than **100 characters**."
+            )
+
+        await update_tag_aliases(
+            self.bot.pool, guild_id=ctx.guild.id, name=tag_name, alias=alias_name
+        )
+
+        await ctx.edit_original_response(content="The alias has been added.")
+
     @app_commands.command(name="all")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _tag_all(self, ctx: discord.Interaction):
@@ -206,6 +268,95 @@ class Tags(
             await ctx.edit_original_response(content="\U0001F44C")
             await paginator.start(ctx)
 
+    @app_commands.command(name="info")
+    @app_commands.rename(tag_name="name")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    async def _tag_info(self, ctx: discord.Interaction, tag_name: str):
+        """Get various information about a tag.
+
+        Parameters
+        ----------
+        tag_name : str
+            The name of the tag to get information about.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        if not await get_tag(self.bot.pool, guild_id=ctx.guild.id, name=tag_name):
+            return await ctx.edit_original_response(
+                content="No such tag found in this server."
+            )
+
+        tag = await get_tag(self.bot.pool, guild_id=ctx.guild.id, name=tag_name)
+
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.title = "Tag Information"
+
+        embed.add_field(name="Name", value=f"`{tag_name}`")
+
+        owner = ctx.guild.get_member(tag["user_id"])
+        embed.add_field(name="Owner", value=owner.mention if owner else "-")
+
+        embed.add_field(
+            name="Created",
+            value=f"<t:{int(tag['created_at'].timestamp())}:F> (<t:{int(tag['created_at'].timestamp())}:R>)",
+        )
+
+        if tag["aliases"]:
+            if await is_alias(self.bot.pool, guild_id=ctx.guild.id, alias=tag_name):
+                embed.title = "Alias Information"
+
+                embed.set_field_at(0, name="Original", value=f"`{tag['name']}`")
+
+                aliases = tag["aliases"].split(",")
+                aliases.pop(aliases.index(tag_name))
+                aliases = list(map(lambda x: f"`{x}`", aliases))
+
+                if len(aliases) != 0:
+                    embed.add_field(name="Other aliases", value=", ".join(aliases))
+
+            else:
+                aliases = tag["aliases"].split(",")
+                aliases = list(map(lambda x: f"`{x}`", aliases))
+
+                if len(aliases) != 0:
+                    embed.add_field(name="Aliases", value=", ".join(aliases))
+
+        await ctx.edit_original_response(embed=embed)
+
+    @app_commands.command(name="search")
+    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
+    @app_commands.guild_only()
+    async def _tag_search(self, ctx: discord.Interaction, query: str):
+        """Search for tags by name.
+
+        Parameters
+        ----------
+        query : str
+            The query to search for.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        tags = await search_tags(self.bot.pool, guild_id=ctx.guild.id, query=query)
+
+        if not tags:
+            await ctx.edit_original_response(content="No such tags found.")
+
+        else:
+            pages = TagPaginatorSource(entries=tags, ctx=ctx)
+            paginator = ViewMenuPages(
+                source=pages,
+                timeout=None,
+                delete_message_after=False,
+                clear_reactions_after=True,
+            )
+
+            await ctx.edit_original_response(content="\U0001F44C")
+            await paginator.start(ctx)
+
     @app_commands.command(name="edit")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _tag_edit(
@@ -215,7 +366,7 @@ class Tags(
 
         Parameters
         ----------
-        member : discord.Member, optional
+        member : Optional[discord.Member]
             The member whose tags are to be edited (requires `Manage Server` permission).
 
         """
@@ -390,157 +541,6 @@ class Tags(
         )
 
         await ctx.edit_original_response(content="The tag has been claimed.")
-
-    @app_commands.command(name="alias")
-    @app_commands.rename(tag_name="name")
-    @app_commands.rename(alias_name="alias")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
-    async def _tag_alias(
-        self, ctx: discord.Interaction, tag_name: str, alias_name: str
-    ):
-        """Add an alias for a pre-existing tag.
-
-        Parameters
-        ----------
-        tag_name : str
-            The name of the tag to add an alias for.
-        alias_name : str
-            The name of the alias to add.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        if not await get_tag(
-            self.bot.pool, guild_id=ctx.guild.id, name=tag_name, check_alias=False
-        ):
-            return await ctx.edit_original_response(
-                content="No such tag found for this server."
-            )
-
-        if (
-            len(
-                await get_tag_aliases(
-                    self.bot.pool, guild_id=ctx.guild.id, name=tag_name
-                )
-            )
-            == 5
-        ):
-            return await ctx.edit_original_response(
-                content="Sorry, a tag cannot have more than **5** aliases."
-            )
-
-        if await get_tag(
-            self.bot.pool, guild_id=ctx.guild.id, name=alias_name
-        ) or await is_alias(self.bot.pool, guild_id=ctx.guild.id, alias=alias_name):
-            return await ctx.edit_original_response(
-                content="This alias is already in use."
-            )
-
-        if "," in alias_name:
-            return await ctx.edit_original_response(
-                content="Alias names cannot have commas."
-            )
-
-        if len(alias_name) > 100:
-            return await ctx.edit_original_response(
-                content="Tag aliases cannot be more than **100 characters**."
-            )
-
-        await update_tag_aliases(
-            self.bot.pool, guild_id=ctx.guild.id, name=tag_name, alias=alias_name
-        )
-
-        await ctx.edit_original_response(content="The alias has been added.")
-
-    @app_commands.command(name="info")
-    @app_commands.rename(tag_name="name")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
-    async def _tag_info(self, ctx: discord.Interaction, tag_name: str):
-        """Get various information about a tag.
-
-        Parameters
-        ----------
-        tag_name : str
-            The name of the tag to get information about.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        if not await get_tag(self.bot.pool, guild_id=ctx.guild.id, name=tag_name):
-            return await ctx.edit_original_response(
-                content="No such tag found in this server."
-            )
-
-        tag = await get_tag(self.bot.pool, guild_id=ctx.guild.id, name=tag_name)
-
-        embed = discord.Embed(colour=self.bot.embed_color)
-        embed.title = "Tag Information"
-
-        embed.add_field(name="Name", value=f"`{tag_name}`")
-
-        owner = ctx.guild.get_member(tag["user_id"])
-        embed.add_field(name="Owner", value=owner.mention if owner else "-")
-
-        embed.add_field(
-            name="Created",
-            value=f"<t:{int(tag['created_at'].timestamp())}:F> (<t:{int(tag['created_at'].timestamp())}:R>)",
-        )
-
-        if tag["aliases"]:
-            if await is_alias(self.bot.pool, guild_id=ctx.guild.id, alias=tag_name):
-                embed.title = "Alias Information"
-
-                embed.set_field_at(0, name="Original", value=f"`{tag['name']}`")
-
-                aliases = tag["aliases"].split(",")
-                aliases.pop(aliases.index(tag_name))
-                aliases = list(map(lambda x: f"`{x}`", aliases))
-
-                if len(aliases) != 0:
-                    embed.add_field(name="Other aliases", value=", ".join(aliases))
-
-            else:
-                aliases = tag["aliases"].split(",")
-                aliases = list(map(lambda x: f"`{x}`", aliases))
-
-                if len(aliases) != 0:
-                    embed.add_field(name="Aliases", value=", ".join(aliases))
-
-        await ctx.edit_original_response(embed=embed)
-
-    @app_commands.command(name="search")
-    @app_commands.checks.dynamic_cooldown(cooldown_level_0)
-    @app_commands.guild_only()
-    async def _tag_search(self, ctx: discord.Interaction, query: str):
-        """Search for tags by name.
-
-        Parameters
-        ----------
-        query : str
-            The query to search for.
-
-        """
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
-
-        tags = await search_tags(self.bot.pool, guild_id=ctx.guild.id, query=query)
-
-        if not tags:
-            await ctx.edit_original_response(content="No such tags found.")
-
-        else:
-            pages = TagPaginatorSource(entries=tags, ctx=ctx)
-            paginator = ViewMenuPages(
-                source=pages,
-                timeout=None,
-                delete_message_after=False,
-                clear_reactions_after=True,
-            )
-
-            await ctx.edit_original_response(content="\U0001F44C")
-            await paginator.start(ctx)
 
 
 async def setup(bot: FumeTool):

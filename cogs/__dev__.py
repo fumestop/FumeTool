@@ -5,7 +5,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import community_server_id
+from config import COMMUNITY_GUILD_ID
 
 if TYPE_CHECKING:
     from bot import FumeTool
@@ -15,15 +15,23 @@ class Dev(commands.Cog):
     def __init__(self, bot: FumeTool):
         self.bot: FumeTool = bot
 
-    @app_commands.command(name="load", description="Load an extension.")
-    @app_commands.guilds(community_server_id)
+    @app_commands.command(name="load")
+    @app_commands.guilds(COMMUNITY_GUILD_ID)
     async def _load(self, ctx: discord.Interaction, extension: str):
-        # noinspection PyUnresolvedReferences
-        await ctx.response.defecr(thinking=True)
+        """Load an extension.
 
-        if not await self.bot.is_owner(ctx.user):
+        Parameters
+        ----------
+        extension : str
+            The name of the extension to load.
+
+        """
+        # noinspection PyUnresolvedReferences
+        await ctx.response.defer(thinking=True)
+
+        if self.bot.owner != ctx.user:
             return await ctx.edit_original_response(
-                content="This is an owner(s) only command!"
+                content="Sorry, this is an owner only command!"
             )
 
         try:
@@ -41,15 +49,23 @@ class Dev(commands.Cog):
 
         await ctx.edit_original_response(content="The extension has been loaded.")
 
-    @app_commands.command(name="unload", description="Unload an extension.")
-    @app_commands.guilds(community_server_id)
+    @app_commands.command(name="unload")
+    @app_commands.guilds(COMMUNITY_GUILD_ID)
     async def _unload(self, ctx: discord.Interaction, extension: str):
+        """Unload an extension.
+
+        Parameters
+        ----------
+        extension : str
+            The name of the extension to unload.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        if not await self.bot.is_owner(ctx.user):
+        if self.bot.owner != ctx.user:
             return await ctx.edit_original_response(
-                content="This is an owner(s) only command!"
+                content="Sorry, this is an owner only command!"
             )
 
         try:
@@ -63,14 +79,22 @@ class Dev(commands.Cog):
         await ctx.edit_original_response(content="The extension has been unloaded.")
 
     @app_commands.command(name="reload")
-    @app_commands.guilds(community_server_id)
+    @app_commands.guilds(COMMUNITY_GUILD_ID)
     async def _reload(self, ctx: discord.Interaction, extension: str):
+        """Reload an extension.
+
+        Parameters
+        ----------
+        extension : str
+            The name of the extension to reload.
+
+        """
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        if not await self.bot.is_owner(ctx.user):
+        if self.bot.owner != ctx.user:
             return await ctx.edit_original_response(
-                content="This is an owner(s) only command!"
+                content="Sorry, this is an owner only command!"
             )
 
         try:
@@ -84,19 +108,20 @@ class Dev(commands.Cog):
         await ctx.edit_original_response(content="The extension has been reloaded.")
 
     @app_commands.command(name="sync")
-    @app_commands.guilds(community_server_id)
+    @app_commands.guilds(COMMUNITY_GUILD_ID)
     async def _sync(self, ctx: discord.Interaction):
+        """Sync the global and guild app commands."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 
-        if not await self.bot.is_owner(ctx.user):
+        if self.bot.owner != ctx.user:
             return await ctx.edit_original_response(
-                content="This is an owner(s) only command!"
+                content="Sorry, this is an owner only command!"
             )
 
         await self.bot.tree.sync()
-        await self.bot.tree.sync(guild=discord.Object(id=community_server_id))
-        self.bot.tree.copy_global_to(guild=discord.Object(id=community_server_id))
+        await self.bot.tree.sync(guild=ctx.guild)
+        self.bot.tree.copy_global_to(guild=ctx.guild)
 
         await ctx.edit_original_response(content="Synced.")
 

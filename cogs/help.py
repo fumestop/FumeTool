@@ -54,8 +54,8 @@ class Help(commands.Cog):
 
         embed.add_field(
             name="Tags",
-            value=f"`tag view`, `tag raw`, `tag add`, `tag list`, `tag all`, `tag edit`, "
-            f"`tag delete`, `tag purge`, `tag claim`, `tag alias`, `tag info`, `tag search`",
+            value=f"`tag view`, `tag raw`, `tag create`, `tag alias`, `tag all`, `tag list`, `tag info`, "
+            f"`tag search`, `tag edit`, `tag delete`, `tag purge`, `tag claim`",
             inline=False,
         )
 

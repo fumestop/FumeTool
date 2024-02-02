@@ -28,11 +28,11 @@ else:
 
 async def create_pool() -> aiomysql.Pool:
     return await aiomysql.create_pool(
-        host=config.db_host,
-        port=config.db_port,
-        user=config.db_user,
-        password=config.db_password,
-        db=config.db_name,
+        host=config.DB_HOST,
+        port=config.DB_PORT,
+        user=config.DB_USER,
+        password=config.DB_PASSWORD,
+        db=config.DB_NAME,
         autocommit=True,
         loop=asyncio.get_event_loop(),
     )

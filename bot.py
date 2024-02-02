@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 import logging
 from datetime import datetime
@@ -9,12 +10,39 @@ import aiohttp
 import aiomysql
 
 import discord
+from discord.app_commands import CommandTree
 from discord.ext import commands, tasks
 from discord.ext.ipc import Server
 
 import config
-from utils.conf import Config
-from utils.db import guild_exists, add_guild
+from utils.db import (
+    guild_exists,
+    add_guild,
+    is_blacklisted_user,
+    is_blacklisted_guild,
+)
+
+
+class FumeTree(CommandTree):
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if await is_blacklisted_user(self.client.pool, interaction.user.id):
+            # noinspection PyUnresolvedReferences
+            await interaction.response.send_message(
+                "You are blacklisted from using this bot. To appeal, join the community server."
+            )
+            return False
+
+        if interaction.guild and await is_blacklisted_guild(
+            self.client.pool, interaction.guild.id
+        ):
+            # noinspection PyUnresolvedReferences
+            await interaction.response.send_message(
+                "This server is blacklisted from using this bot. To appeal, join the community server."
+            )
+            await interaction.guild.leave()
+            return False
+
+        return True
 
 
 class FumeTool(commands.AutoShardedBot):
@@ -25,8 +53,6 @@ class FumeTool(commands.AutoShardedBot):
     topggpy: topgg.DBLClient
     ipc: Server
     log: logging.Logger
-    user_blacklist: Config[bool]
-    guild_blacklist: Config[bool]
 
     def __init__(self):
         description = "FumeTool - A fun and utility bot for your Discord server."
@@ -41,28 +67,26 @@ class FumeTool(commands.AutoShardedBot):
             heartbeat_timeout=180.0,
             intents=intents,
             help_command=None,
+            tree_cls=FumeTree,
         )
 
-        self._launch_time: datetime = datetime.now()
-        self._status_items: cycle = cycle([])
+        self._launch_time: datetime = Any
+        self._status_items: cycle = Any
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
         self.bot_app_info = await self.application_info()
 
-        self.user_blacklist: Config[bool] = Config("data/user_blacklist.json")
-        self.guild_blacklist: Config[bool] = Config("data/guild_blacklist.json")
-
-        self.topggpy = topgg.DBLClient(bot=self, token=self.config.topgg_token)
+        self.topggpy = topgg.DBLClient(bot=self, token=self.config.TOPGG_TOKEN)
         # noinspection PyTypeChecker
         self.ipc = Server(
             self,
-            secret_key=self.config.ipc_secret_key,
-            standard_port=self.config.ipc_standard_port,
-            multicast_port=self.config.ipc_multicast_port,
+            secret_key=self.config.IPC_SECRET_KEY,
+            standard_port=self.config.IPC_STANDARD_PORT,
+            multicast_port=self.config.IPC_MULTICAST_PORT,
         )
 
-        for _extension in self.config.initial_extensions:
+        for _extension in self.config.INITIAL_EXTENSIONS:
             try:
                 await self.load_extension(_extension)
                 self.log.info(f"Loaded extension {_extension}.")
@@ -99,21 +123,24 @@ class FumeTool(commands.AutoShardedBot):
         if message.author.bot:
             return
 
-        if message.author.id in self.user_blacklist:
+        if await is_blacklisted_user(self.pool, message.author.id):
             return
+
+        if message.guild and await is_blacklisted_guild(self.pool, message.guild.id):
+            return await message.guild.leave()
 
         if message.guild and message.guild.me in message.mentions:
             await message.reply(content="Hello there! Use `/help` to get started.")
 
     async def on_guild_join(self, guild) -> None:
-        if guild.id in self.guild_blacklist:
+        if await is_blacklisted_guild(self.pool, guild.id):
             return await guild.leave()
 
         if not await guild_exists(self.pool, guild_id=guild.id):
             return await add_guild(self.pool, guild_id=guild.id)
 
     async def start(self, **kwargs) -> None:
-        await super().start(config.token, reconnect=True)
+        await super().start(config.TOKEN, reconnect=True)
 
     async def close(self) -> None:
         await super().close()
@@ -131,7 +158,7 @@ class FumeTool(commands.AutoShardedBot):
 
     @property
     def embed_color(self) -> int:
-        return self.config.embed_color
+        return self.config.EMBED_COLOR
 
     @property
     def launch_time(self) -> datetime:
@@ -144,7 +171,7 @@ class FumeTool(commands.AutoShardedBot):
     @discord.utils.cached_property
     def webhook(self) -> discord.Webhook:
         return discord.Webhook.partial(
-            id=self.config.webhook_id,
-            token=self.config.webhook_token,
+            id=self.config.WEBHOOK_ID,
+            token=self.config.WEBHOOK_TOKEN,
             session=self.session,
         )

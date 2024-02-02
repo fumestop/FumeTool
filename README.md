@@ -1,32 +1,31 @@
 `config.py`:
 
 ```python
-token = "token"
+TOKEN = "token"
 
-embed_color = 0xE44C65
+EMBED_COLOR = 0xE44C65
 
-webhook_id = 12345
-webhook_token = "webhook_token"
+WEBHOOK_ID = 1234567890
+WEBHOOK_TOKEN = "webhook_token"
 
-ipc_secret_key = "ipc_secret_key"
-ipc_standard_port = 10003
-ipc_multicast_port = 20003
+IPC_SECRET_KEY = "ipc_secret_key"
+IPC_STANDARD_PORT = 10003
+IPC_MULTICAST_PORT = 20003
 
-community_server_id = 12345
-log_channel_id = 12345
+COMMUNITY_GUILD_ID = 1234567890
 
-db_name = "db_name"
-db_user = "db_user"
-db_password = "db_password"
-db_host = "localhost"
-db_port = 3306
+DB_NAME = "db_name"
+DB_USER = "db_user"
+DB_PASSWORD = "db_password"
+DB_HOST = "localhost"
+DB_PORT = 3306
 
-steam_api_key = "steam_api_key"
-weather_api_key = "weather_api_key"
+STEAM_API_KEY = "steam_api_key"
+WEATHER_API_KEY = "weather_api_key"
 
-topgg_token = "topgg_token"
+TOPGG_TOKEN = "topgg_token"
 
-initial_extensions = [
+INITIAL_EXTENSIONS = [
     "cogs.__dev__",
     "cogs.__error__",
     "cogs.__eval__",
@@ -40,7 +39,3 @@ initial_extensions = [
     "cogs.utility",
 ]
 ```
-
-`data/user_blacklist.json`: `{}`
-
-`data/guild_blacklist.json`: `{}`

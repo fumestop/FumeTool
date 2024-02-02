@@ -29,7 +29,7 @@ class Utility(commands.Cog):
     def __init__(self, bot: FumeTool):
         self.bot: FumeTool = bot
 
-        self.steam = WebAPI(self.bot.config.steam_api_key)
+        self.steam = WebAPI(self.bot.config.STEAM_API_KEY)
 
         self.poll_reaction_emojis = {
             1: "1\N{variation selector-16}\N{combining enclosing keycap}",
@@ -153,7 +153,8 @@ class Utility(commands.Cog):
 
         embed = discord.Embed(colour=self.bot.embed_color)
 
-        embed.set_thumbnail(url=ctx.guild.icon.url)
+        if ctx.guild.icon:
+            embed.set_thumbnail(url=ctx.guild.icon.url)
 
         embed.add_field(name="Name", value=ctx.guild.name)
         embed.add_field(name="ID", value=f"`{ctx.guild.id}`")
@@ -590,7 +591,7 @@ class Utility(commands.Cog):
             ) as session:
                 async with session.get(
                     f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/"
-                    f"?key={self.bot.config.steam_api_key}&steamid={steam_id}"
+                    f"?key={self.bot.config.STEAM_API_KEY}&steamid={steam_id}"
                     f"&include_played_free_games=1%format=json"
                 ) as res:
                     games = await res.json()
@@ -761,7 +762,7 @@ class Utility(commands.Cog):
                 timeout=aiohttp.ClientTimeout(total=10)
             ) as session:
                 async with session.get(
-                    f"https://api.weatherapi.com/v1/current.json?key={self.bot.config.weather_api_key}&q={city}"
+                    f"https://api.weatherapi.com/v1/current.json?key={self.bot.config.WEATHER_API_KEY}&q={city}"
                 ) as res:
                     res = await res.json()
 

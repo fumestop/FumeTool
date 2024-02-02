@@ -25,7 +25,7 @@ class TagPaginatorSource(ListPageSource):
         self.show_owner: bool = show_owner
 
     async def format_page(self, menu: Menu, page):
-        embed = discord.Embed(color=config.embed_color)
+        embed = discord.Embed(color=config.EMBED_COLOR)
         embed.title = "Tags"
         embed.description = "\n".join(
             f"`{_tag['index']}.` **{_tag['name']}** "
@@ -44,7 +44,7 @@ class TagPaginatorSource(ListPageSource):
             )
 
         embed.set_footer(
-            text=f"{self.get_max_pages()} pages | {len(self.entries)} tags"
+            text=f"{self.get_max_pages()} page(s) | {len(self.entries)} tag(s)"
         )
 
         return embed

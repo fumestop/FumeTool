@@ -107,7 +107,7 @@ class TagEditModal(ui.Modal, title="Edit Tag"):
         self.interaction = ctx
 
         # noinspection PyUnresolvedReferences
-        await ctx.response.defer(thinking=True)
+        await ctx.response.defer()
 
     async def on_timeout(self):
         await self.ctx.followup.send(
