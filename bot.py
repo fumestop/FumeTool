@@ -25,24 +25,39 @@ from utils.db import (
 
 class FumeTree(CommandTree):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if await is_blacklisted_user(self.client.pool, interaction.user.id):
-            # noinspection PyUnresolvedReferences
-            await interaction.response.send_message(
-                "You are blacklisted from using this bot. To appeal, join the community server."
-            )
-            return False
-
         if interaction.guild and await is_blacklisted_guild(
             self.client.pool, interaction.guild.id
         ):
             # noinspection PyUnresolvedReferences
             await interaction.response.send_message(
-                "This server is blacklisted from using this bot. To appeal, join the community server."
+                "This server is currently blacklisted from using the FumeStop service. "
+                "To appeal, join our community server.",
+                view=discord.ui.View().add_item(
+                    discord.ui.Button(
+                        label="Community Server Invite",
+                        url="https://fumes.top/community",
+                    )
+                ),
             )
             await interaction.guild.leave()
             return False
 
-        return True
+        elif await is_blacklisted_user(self.client.pool, interaction.user.id):
+            # noinspection PyUnresolvedReferences
+            await interaction.response.send_message(
+                "You are currently blacklisted from using the FumeStop service. "
+                "To appeal, join our community server:",
+                view=discord.ui.View().add_item(
+                    discord.ui.Button(
+                        label="Community Server Invite",
+                        url="https://fumes.top/community",
+                    )
+                ),
+            )
+            return False
+
+        else:
+            return True
 
 
 class FumeTool(commands.AutoShardedBot):
@@ -123,17 +138,57 @@ class FumeTool(commands.AutoShardedBot):
         if message.author.bot:
             return
 
-        if await is_blacklisted_user(self.pool, message.author.id):
-            return
-
         if message.guild and await is_blacklisted_guild(self.pool, message.guild.id):
+            try:
+                await message.reply(
+                    content="This server is currently blacklisted from using the FumeStop service. "
+                    "To appeal, join our community server.",
+                    view=discord.ui.View().add_item(
+                        discord.ui.Button(
+                            label="Community Server Invite",
+                            url="https://fumes.top/community",
+                        )
+                    ),
+                )
+
+            except (discord.Forbidden, discord.errors.Forbidden):
+                pass
+
             return await message.guild.leave()
+
+        if await is_blacklisted_user(self.pool, message.author.id):
+            await message.reply(
+                content="You are currently blacklisted from using the FumeStop service. "
+                "To appeal, join our community server:",
+                view=discord.ui.View().add_item(
+                    discord.ui.Button(
+                        label="Community Server Invite",
+                        url="https://fumes.top/community",
+                    )
+                ),
+            )
+            return
 
         if message.guild and message.guild.me in message.mentions:
             await message.reply(content="Hello there! Use `/help` to get started.")
 
     async def on_guild_join(self, guild) -> None:
         if await is_blacklisted_guild(self.pool, guild.id):
+            try:
+                await guild.system_channel.send(
+                    "This server has been blacklisted from using the FumeStop service. "
+                    "To appeal, join our community server.",
+                    view=discord.ui.View().add_item(
+                        discord.ui.Button(
+                            label="Community Server Invite",
+                            url="https://fumes.top/community",
+                        )
+                    ),
+                )
+
+            except (discord.Forbidden, discord.errors.Forbidden):
+                pass
+
             return await guild.leave()
 
         if not await guild_exists(self.pool, guild_id=guild.id):
