@@ -18,7 +18,7 @@ class Help(commands.Cog):
     @app_commands.command(name="help")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
     async def _help(self, ctx: discord.Interaction):
-        """A list of all the commands provided by FumeTool."""
+        """Shows a list of all the commands provided by FumeTool."""
         # noinspection PyUnresolvedReferences
         await ctx.response.defer(thinking=True)
 

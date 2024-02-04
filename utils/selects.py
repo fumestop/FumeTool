@@ -26,8 +26,6 @@ class TagEditSelect(ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         modal = TagEditModal()
-        modal.title = "Edit Tag"
-        modal.timeout = 300
         modal.ctx = self.ctx
 
         tag = await get_tag(

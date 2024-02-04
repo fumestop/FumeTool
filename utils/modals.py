@@ -13,8 +13,9 @@ class EvalModal(ui.Modal, title="Evaluate Code"):
 
     code = ui.TextInput(
         label="Code",
-        placeholder="The code to evaluate...",
+        placeholder="Enter the code to evaluate",
         style=discord.TextStyle.paragraph,
+        required=True,
     )
 
     async def on_submit(self, ctx: discord.Interaction):
@@ -37,8 +38,9 @@ class ExecModal(ui.Modal, title="Execute Shell Commands"):
 
     sh_commands = ui.TextInput(
         label="Command(s)",
-        placeholder="The command(s) to execute...",
+        placeholder="Enter the command(s) to execute",
         style=discord.TextStyle.paragraph,
+        required=True,
     )
 
     async def on_submit(self, ctx: discord.Interaction):

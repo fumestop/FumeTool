@@ -22,18 +22,18 @@ class IPC(commands.Cog):
     # noinspection PyUnusedLocal
     @Server.route(name="get_guild_count")
     async def _get_guild_count(self, data: ClientPayload):
-        return {"count": len(self.bot.guilds)}
+        return {"status": 200, "count": len(self.bot.guilds)}
 
     # noinspection PyUnusedLocal
     @Server.route(name="get_user_count")
     async def _get_user_count(self, data: ClientPayload):
-        return {"count": len(self.bot.users)}
+        return {"status": 200, "count": len(self.bot.users)}
 
     # noinspection PyUnusedLocal
     @Server.route(name="get_command_count")
     async def _get_command_count(self, data: ClientPayload):
         _commands = await self.bot.tree.fetch_commands()
-        return {"count": len(_commands)}
+        return {"status": 200, "count": len(_commands)}
 
     @Server.route(name="get_channel_list")
     async def _get_channel_list(self, data: ClientPayload):
