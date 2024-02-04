@@ -9,7 +9,7 @@ class EvalModal(ui.Modal, title="Evaluate Code"):
     ctx: Optional[discord.Interaction] = None
     interaction: Optional[discord.Interaction] = None
 
-    timeout: int = 300
+    timeout: int = 5 * 60
 
     code = ui.TextInput(
         label="Code",
@@ -33,7 +33,7 @@ class ExecModal(ui.Modal, title="Execute Shell Commands"):
     ctx: Optional[discord.Interaction] = None
     interaction: Optional[discord.Interaction] = None
 
-    timeout: int = 300
+    timeout: int = 5 * 60
 
     sh_commands = ui.TextInput(
         label="Command(s)",
@@ -57,7 +57,7 @@ class TagCreateModal(ui.Modal, title="Create Tag"):
     ctx: Optional[discord.Interaction] = None
     interaction: Optional[discord.Interaction] = None
 
-    timeout: int = 300
+    timeout: int = 5 * 60
 
     tag_name = ui.TextInput(
         label="Tag Name",
@@ -92,7 +92,7 @@ class TagEditModal(ui.Modal, title="Edit Tag"):
     ctx: Optional[discord.Interaction] = None
     interaction: Optional[discord.Interaction] = None
 
-    timeout: int = 300
+    timeout: int = 5 * 60
 
     tag_content = ui.TextInput(
         label="Tag Content",
