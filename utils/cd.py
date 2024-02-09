@@ -4,7 +4,7 @@ from typing import Optional
 import discord
 from discord import app_commands
 
-from utils.db import is_premium_user
+from .db import is_premium_user
 
 
 async def cooldown_level_0(

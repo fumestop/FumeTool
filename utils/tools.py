@@ -1,8 +1,8 @@
 from __future__ import annotations
+from typing import Union
 
 import re
 import random
-from typing import Union
 
 
 _faces = [

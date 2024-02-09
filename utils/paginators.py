@@ -1,12 +1,12 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Any
 
 import discord
 from discord.ext.menus import Menu, ListPageSource
 
 import config
 
-from utils.tools import format_boolean_text
+from .tools import format_boolean_text
 
 
 class TagPaginatorSource(ListPageSource):
@@ -24,7 +24,7 @@ class TagPaginatorSource(ListPageSource):
         self.member: discord.Member = member
         self.show_owner: bool = show_owner
 
-    async def format_page(self, menu: Menu, page):
+    async def format_page(self, menu: Menu, page: Any) -> discord.Embed:
         embed = discord.Embed(color=config.EMBED_COLOR)
         embed.title = "Tags"
         embed.description = "\n".join(
@@ -49,7 +49,7 @@ class TagPaginatorSource(ListPageSource):
 
         return embed
 
-    def is_paginating(self):
+    def is_paginating(self) -> bool:
         return True
 
 
@@ -66,7 +66,7 @@ class RolePaginatorSource(ListPageSource):
         self.role: discord.Role = role
         self.position: int = position
 
-    async def format_page(self, menu: Menu, page):
+    async def format_page(self, menu: Menu, page: Any) -> discord.Embed:
         embed = discord.Embed(color=self.role.color)
         embed.title = f"Role Information for {self.role.name}"
         embed.add_field(name="ID", value=self.role.id)
@@ -91,5 +91,5 @@ class RolePaginatorSource(ListPageSource):
 
         return embed
 
-    def is_paginating(self):
+    def is_paginating(self) -> bool:
         return True
