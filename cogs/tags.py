@@ -210,19 +210,18 @@ class Tags(
                 content="This server does not have any tags yet."
             )
 
-        else:
-            tags = await get_all_tags(self.bot.pool, guild_id=ctx.guild.id)
+        tags = await get_all_tags(self.bot.pool, guild_id=ctx.guild.id)
 
-            pages = TagPaginatorSource(entries=tags, ctx=ctx)
-            paginator = ViewMenuPages(
-                source=pages,
-                timeout=None,
-                delete_message_after=False,
-                clear_reactions_after=True,
-            )
+        pages = TagPaginatorSource(entries=tags, ctx=ctx)
+        paginator = ViewMenuPages(
+            source=pages,
+            timeout=None,
+            delete_message_after=False,
+            clear_reactions_after=True,
+        )
 
-            await ctx.edit_original_response(content="\U0001F44C")
-            await paginator.start(ctx)
+        await ctx.edit_original_response(content="\U0001F44C")
+        await paginator.start(ctx)
 
     @app_commands.command(name="list")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
@@ -250,23 +249,22 @@ class Tags(
                 allowed_mentions=discord.AllowedMentions.none(),
             )
 
-        else:
-            tags = await get_all_tags(
-                self.bot.pool, guild_id=ctx.guild.id, user_id=member.id
-            )
+        tags = await get_all_tags(
+            self.bot.pool, guild_id=ctx.guild.id, user_id=member.id
+        )
 
-            pages = TagPaginatorSource(
-                entries=tags, ctx=ctx, member=member, show_owner=False
-            )
-            paginator = ViewMenuPages(
-                source=pages,
-                timeout=None,
-                delete_message_after=False,
-                clear_reactions_after=True,
-            )
+        pages = TagPaginatorSource(
+            entries=tags, ctx=ctx, member=member, show_owner=False
+        )
+        paginator = ViewMenuPages(
+            source=pages,
+            timeout=None,
+            delete_message_after=False,
+            clear_reactions_after=True,
+        )
 
-            await ctx.edit_original_response(content="\U0001F44C")
-            await paginator.start(ctx)
+        await ctx.edit_original_response(content="\U0001F44C")
+        await paginator.start(ctx)
 
     @app_commands.command(name="info")
     @app_commands.rename(tag_name="name")
