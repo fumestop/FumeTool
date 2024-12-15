@@ -1,23 +1,23 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
-import asyncio
 import random
-import string
 import socket
+import string
+import asyncio
 from io import BytesIO
 from contextlib import suppress
-
-import discord
-from discord import app_commands
-from discord.ext import commands
 
 import gtts
 import whois
 import aiohttp
+import discord
 import validators
 from dns import resolver
 from PIL import Image, UnidentifiedImageError
+from discord import app_commands
+from discord.ext import commands
 
 from utils.cd import cooldown_level_1
 
@@ -30,16 +30,16 @@ class Development(commands.Cog):
         self.bot: FumeTool = bot
 
         self.overall_status = {
-            "All Systems Operational": "\U0001F7E2",
-            "Partial System Outage": "\U0001F7E2",
-            "Major Service Outage": "\U0001F534",
+            "All Systems Operational": "\U0001f7e2",
+            "Partial System Outage": "\U0001f7e2",
+            "Major Service Outage": "\U0001f534",
         }
 
         self.component_status = {
-            "Operational": "\U0001F7E2",
-            "Degraded Performance": "\U0001F7E1",
-            "Partial Outage": "\U0001F7E2",
-            "Major Outage": "\U0001F534",
+            "Operational": "\U0001f7e2",
+            "Degraded Performance": "\U0001f7e1",
+            "Partial Outage": "\U0001f7e2",
+            "Major Outage": "\U0001f534",
         }
 
     @app_commands.command(name="dns")

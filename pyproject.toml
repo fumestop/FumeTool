@@ -1,3 +1,58 @@
-[tool.black]
+[project]
+name = "FumeTool"
+version = "1.0.0"
+description = "FumeTool - A fun and utility bot for your Discord server."
+license = "AGPL-3.0"
+authors = [
+    { name="Sayan Bhattacharyya", email="sayan@sn1f3rt.dev" },
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiodns>=3.2.0",
+    "aiomysql>=0.2.0",
+    "better-ipc",
+    "discord-ext-menus",
+    "discord-ext-menus-views",
+    "discord-py[speed]>=2.4.0",
+    "dnspython>=2.7.0",
+    "gtts>=2.5.4",
+    "pillow>=11.0.0",
+    "py-googletrans",
+    "python-whois>=0.9.5",
+    "steam>=1.4.4",
+    "topggpy>=1.4.0",
+    "validators>=0.34.0",
+    "wikipedia-api>=0.7.1",
+]
+
+[project.optional-dependencies]
+speed = [
+    "uvloop>=0.21.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pre-commit>=4.0.1",
+    "ruff>=0.8.3",
+]
+
+[tool.uv.sources]
+better-ipc = { git = "https://github.com/MiroslavRosenov/better-ipc/", rev = "efb145d9dabc0a90e4c6e32be08bd03ae4257249" }
+discord-ext-menus = { git = "https://github.com/Rapptz/discord-ext-menus", rev = "8686b5d1bbc1d3c862292eb436ab630d6e9c9b53" }
+discord-ext-menus-views = { git = "https://github.com/FumeStop/discord-ext-menus-views", rev = "35049b5e1c11a866d69359d7c6227d8715aaf27d" }
+py-googletrans = { git = "https://github.com/ssut/py-googletrans" }
+
+[tool.ruff]
 line-length = 85
-target-version = ["py311"]
+target-version = "py313"
+
+[tool.ruff.lint.isort]
+section-order = ["future", "typing", "standard-library", "third-party", "first-party", "local-folder", "config"]
+force-wrap-aliases = true
+combine-as-imports = true
+length-sort = true
+
+[tool.ruff.lint.isort.sections]
+"typing" = ["typing"]
+"config" = ["config"]

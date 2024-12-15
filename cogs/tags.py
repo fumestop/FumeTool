@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 import discord
@@ -7,22 +8,22 @@ from discord.ext import commands
 from discord.ext.menus.views import ViewMenuPages
 
 from utils.cd import cooldown_level_0
+from utils.db import (
+    get_tag,
+    is_alias,
+    count_tags,
+    create_tag,
+    purge_tags,
+    search_tags,
+    get_all_tags,
+    get_tag_owner,
+    get_tag_aliases,
+    update_tag_owner,
+    update_tag_aliases,
+)
 from utils.modals import TagCreateModal
 from utils.selects import TagEditSelect, TagDeleteSelect
 from utils.paginators import TagPaginatorSource
-from utils.db import (
-    count_tags,
-    create_tag,
-    get_all_tags,
-    get_tag,
-    purge_tags,
-    search_tags,
-    get_tag_owner,
-    update_tag_owner,
-    get_tag_aliases,
-    is_alias,
-    update_tag_aliases,
-)
 
 if TYPE_CHECKING:
     from bot import FumeTool
@@ -220,7 +221,7 @@ class Tags(
             clear_reactions_after=True,
         )
 
-        await ctx.edit_original_response(content="\U0001F44C")
+        await ctx.edit_original_response(content="\U0001f44c")
         await paginator.start(ctx)
 
     @app_commands.command(name="list")
@@ -263,7 +264,7 @@ class Tags(
             clear_reactions_after=True,
         )
 
-        await ctx.edit_original_response(content="\U0001F44C")
+        await ctx.edit_original_response(content="\U0001f44c")
         await paginator.start(ctx)
 
     @app_commands.command(name="info")
@@ -352,7 +353,7 @@ class Tags(
                 clear_reactions_after=True,
             )
 
-            await ctx.edit_original_response(content="\U0001F44C")
+            await ctx.edit_original_response(content="\U0001f44c")
             await paginator.start(ctx)
 
     @app_commands.command(name="edit")

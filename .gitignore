@@ -160,7 +160,7 @@ cython_debug/
 .idea/
 
 # FumeTool
-data/*.json
+config.py
 logs/*.log
 logs/errors/*.log
-config.py
+uv.lock

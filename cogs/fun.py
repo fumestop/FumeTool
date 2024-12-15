@@ -1,10 +1,10 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import random
 
 import aiohttp
-
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -108,7 +108,7 @@ class Fun(commands.Cog):
                 img_url = res[0]
 
         embed = discord.Embed(colour=self.bot.embed_color)
-        embed.title = "Random Doggo \U0001f436 \U0001F60D"
+        embed.title = "Random Doggo \U0001f436 \U0001f60d"
         embed.set_image(url=img_url)
 
         await ctx.edit_original_response(embed=embed)
@@ -134,7 +134,7 @@ class Fun(commands.Cog):
                 img_url = res[0]
 
         embed = discord.Embed(colour=self.bot.embed_color)
-        embed.title = "Random Kitty \U0001f431 \U0001F60D"
+        embed.title = "Random Kitty \U0001f431 \U0001f60d"
         embed.set_image(url=img_url)
 
         await ctx.edit_original_response(embed=embed)
@@ -160,7 +160,7 @@ class Fun(commands.Cog):
                 img_url = res[0]
 
         embed = discord.Embed(colour=self.bot.embed_color)
-        embed.title = "Random Birdie \U0001f426 \U0001F60D"
+        embed.title = "Random Birdie \U0001f426 \U0001f60d"
         embed.set_image(url=img_url)
 
         await ctx.edit_original_response(embed=embed)

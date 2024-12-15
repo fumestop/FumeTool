@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Any
 
 import logging
@@ -7,20 +8,20 @@ from itertools import cycle
 
 import topgg
 import aiohttp
-import aiomysql
-
 import discord
-from discord.app_commands import CommandTree
-from discord.ext import commands, tasks
+import aiomysql
+from discord.ext import tasks, commands
 from discord.ext.ipc import Server
+from discord.app_commands import CommandTree
 
-import config
 from utils.db import (
-    guild_exists,
     add_guild,
+    guild_exists,
     is_blacklisted_user,
     is_blacklisted_guild,
 )
+
+import config
 
 
 class FumeTree(CommandTree):

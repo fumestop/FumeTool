@@ -1,12 +1,12 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import discord
 from discord import ui
 
-from .modals import TagEditModal
-
 from .db import get_tag, edit_tag, delete_tag
+from .modals import TagEditModal
 
 if TYPE_CHECKING:
     from bot import FumeTool

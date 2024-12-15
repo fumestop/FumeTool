@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Optional, Any
+
+from typing import Any, Optional
 
 import discord
 from discord.ext.menus import Menu, ListPageSource
 
-import config
-
 from .tools import format_boolean_text
+
+import config
 
 
 class TagPaginatorSource(ListPageSource):

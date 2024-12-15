@@ -1,25 +1,25 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
 
 import asyncio
 from contextlib import suppress
 
-import discord
-from discord import app_commands
-from discord.ext import commands
-from discord.ext.menus.views import ViewMenuPages
-
 import httpx
 import aiohttp
+import discord
+import googletrans
 import wikipediaapi
+from discord import app_commands
+from discord.ext import commands
+from steam.enums import EPersonaState
 from steam.webapi import WebAPI
 from steam.steamid import SteamID
-from steam.enums import EPersonaState
-import googletrans
+from discord.ext.menus.views import ViewMenuPages
 
 from utils.cd import cooldown_level_0, cooldown_level_1
-from utils.paginators import RolePaginatorSource
 from utils.tools import format_boolean_text
+from utils.paginators import RolePaginatorSource
 
 if TYPE_CHECKING:
     from bot import FumeTool
@@ -32,16 +32,16 @@ class Utility(commands.Cog):
         self.steam = WebAPI(self.bot.config.STEAM_API_KEY)
 
         self.poll_reaction_emojis = {
-            1: "1\N{variation selector-16}\N{combining enclosing keycap}",
-            2: "2\N{variation selector-16}\N{combining enclosing keycap}",
-            3: "3\N{variation selector-16}\N{combining enclosing keycap}",
-            4: "4\N{variation selector-16}\N{combining enclosing keycap}",
-            5: "5\N{variation selector-16}\N{combining enclosing keycap}",
-            6: "6\N{variation selector-16}\N{combining enclosing keycap}",
-            7: "7\N{variation selector-16}\N{combining enclosing keycap}",
-            8: "8\N{variation selector-16}\N{combining enclosing keycap}",
-            9: "9\N{variation selector-16}\N{combining enclosing keycap}",
-            10: "\N{keycap ten}",
+            1: "1\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            2: "2\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            3: "3\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            4: "4\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            5: "5\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            6: "6\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            7: "7\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            8: "8\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            9: "9\N{VARIATION SELECTOR-16}\N{COMBINING ENCLOSING KEYCAP}",
+            10: "\N{KEYCAP TEN}",
         }
 
     @app_commands.command(name="avatar")
@@ -357,7 +357,7 @@ class Utility(commands.Cog):
             clear_reactions_after=True,
         )
 
-        await ctx.edit_original_response(content="\U0001F44C")
+        await ctx.edit_original_response(content="\U0001f44c")
         await paginator.start(ctx)
 
     @app_commands.command(name="define")
@@ -689,36 +689,35 @@ class Utility(commands.Cog):
         # noinspection PyUnresolvedReferences
         await ctx.response.defer()
 
-        translator = googletrans.Translator(timeout=httpx.Timeout(10.0))
+        async with googletrans.Translator(timeout=httpx.Timeout(10.0)) as translator:
+            try:
+                translation = await translator.translate(text, dest=language)
 
-        try:
-            translation = translator.translate(text, dest=language)
+            except ValueError:
+                return await ctx.edit_original_response(
+                    content="Either an invalid or unsupported language was specified."
+                )
 
-        except ValueError:
-            return await ctx.edit_original_response(
-                content="Either an invalid or unsupported language was specified."
-            )
+            embed = discord.Embed(color=self.bot.embed_color)
+            embed.title = "Translation"
+            embed.description = translation.text
 
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.title = "Translation"
-        embed.description = translation.text
-
-        embed.add_field(
-            name="Detected Language",
-            value=googletrans.LANGUAGES[translation.src].capitalize(),
-        )
-        embed.add_field(
-            name="Target Language",
-            value=googletrans.LANGUAGES[translation.dest].capitalize(),
-        )
-        if translation.extra_data["confidence"]:
             embed.add_field(
-                name="Confidence",
-                value=f"{translation.extra_data['confidence'] * 100}%",
+                name="Detected Language",
+                value=googletrans.LANGUAGES[translation.src].capitalize(),
             )
-        embed.add_field(name="Pronunciation", value=translation.pronunciation)
+            embed.add_field(
+                name="Target Language",
+                value=googletrans.LANGUAGES[translation.dest].capitalize(),
+            )
+            if translation.extra_data["confidence"]:
+                embed.add_field(
+                    name="Confidence",
+                    value=f"{translation.extra_data['confidence'] * 100}%",
+                )
+            embed.add_field(name="Pronunciation", value=translation.pronunciation)
 
-        await ctx.edit_original_response(embed=embed)
+            await ctx.edit_original_response(embed=embed)
 
     @app_commands.command(name="weather")
     @app_commands.checks.dynamic_cooldown(cooldown_level_0)
@@ -831,7 +830,7 @@ class Utility(commands.Cog):
                         embed.add_field(
                             name="Wind Speed",
                             value=(
-                                f"{current['wind_kph']} km/h"
+                                f"{current['wind_kph']} kmph"
                                 if speed_scale.value == "k"
                                 else f"{current['wind_mph']} mph"
                             ),

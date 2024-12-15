@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from discord.ext import commands, tasks
+from discord.ext import tasks, commands
 
 if TYPE_CHECKING:
     from bot import FumeTool

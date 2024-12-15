@@ -1,9 +1,9 @@
 from __future__ import annotations
+
 from typing import Union
 
 import re
 import random
-
 
 _faces = [
     "(*^ω^)",
