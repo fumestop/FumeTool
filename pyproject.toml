@@ -12,6 +12,7 @@ dependencies = [
     "aiodns>=3.2.0",
     "aiomysql>=0.2.0",
     "better-ipc",
+    "click>=8.1.7",
     "discord-ext-menus",
     "discord-ext-menus-views",
     "discord-py[speed]>=2.4.0",
