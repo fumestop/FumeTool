@@ -12,10 +12,11 @@ from contextlib import suppress
 import gtts
 import whois
 import aiohttp
-import discord
 import validators
 from dns import resolver
 from PIL import Image, UnidentifiedImageError
+
+import discord
 from discord import app_commands
 from discord.ext import commands
 

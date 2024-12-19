@@ -7,14 +7,15 @@ from contextlib import suppress
 
 import httpx
 import aiohttp
-import discord
 import googletrans
 import wikipediaapi
-from discord import app_commands
-from discord.ext import commands
 from steam.enums import EPersonaState
 from steam.webapi import WebAPI
 from steam.steamid import SteamID
+
+import discord
+from discord import app_commands
+from discord.ext import commands
 from discord.ext.menus.views import ViewMenuPages
 
 from utils.cd import cooldown_level_0, cooldown_level_1

@@ -8,8 +8,9 @@ from itertools import cycle
 
 import topgg
 import aiohttp
-import discord
 import aiomysql
+
+import discord
 from discord.ext import tasks, commands
 from discord.ext.ipc import Server
 from discord.app_commands import CommandTree
