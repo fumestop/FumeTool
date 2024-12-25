@@ -605,7 +605,11 @@ class Development(commands.Cog):
 
                     embed = discord.Embed(colour=self.bot.embed_color)
                     embed.title = f"PyPI Lookup - {res['name']}"
-                    embed.description = res["summary"]
+                    embed.description = (
+                        (res["summary"][:1021] + "...")
+                        if len(res["summary"]) > 1024
+                        else res["summary"]
+                    )
                     embed.url = res["package_url"]
                     embed.set_thumbnail(
                         url="https://pbs.twimg.com/profile_images/"
@@ -662,7 +666,11 @@ class Development(commands.Cog):
 
                     embed = discord.Embed(colour=self.bot.embed_color)
                     embed.title = f"NPM Lookup - {res['name']}"
-                    embed.description = res["description"]
+                    embed.description = (
+                        (res["description"][:1021] + "...")
+                        if len(res["description"]) > 1024
+                        else res["description"]
+                    )
                     embed.url = f"https://www.npmjs.com/package/{res['name']}"
                     embed.set_thumbnail(
                         url="https://static.npmjs.com/58a19602036db1daee0d7863c94673a4.png"

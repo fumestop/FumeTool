@@ -236,7 +236,7 @@ async def search_tags(pool: aiomysql.Pool, guild_id: int, query: str):
                 (guild_id, f"%{query}%"),
             )
 
-            res1 = await cur.fetchall()
+            res1 = list(await cur.fetchall())
 
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:

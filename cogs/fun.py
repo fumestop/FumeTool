@@ -98,7 +98,7 @@ class Fun(commands.Cog):
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10)
         ) as session:
-            async with session.get("https://shibe.online/api/shibes") as res:
+            async with session.get("https://some-random-api.com/animal/dog") as res:
                 if res.status != 200:
                     return await ctx.edit_original_response(
                         content="An API-side error occurred. "
@@ -106,11 +106,11 @@ class Fun(commands.Cog):
                     )
 
                 res = await res.json()
-                img_url = res[0]
 
         embed = discord.Embed(colour=self.bot.embed_color)
         embed.title = "Random Doggo \U0001f436 \U0001f60d"
-        embed.set_image(url=img_url)
+        embed.description = f"Fun fact: {res['fact']}"
+        embed.set_image(url=res["image"])
 
         await ctx.edit_original_response(embed=embed)
 
@@ -124,7 +124,7 @@ class Fun(commands.Cog):
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10)
         ) as session:
-            async with session.get("https://shibe.online/api/cats") as res:
+            async with session.get("https://some-random-api.com/animal/cat") as res:
                 if res.status != 200:
                     return await ctx.edit_original_response(
                         content="An API-side error occurred. "
@@ -132,11 +132,11 @@ class Fun(commands.Cog):
                     )
 
                 res = await res.json()
-                img_url = res[0]
 
         embed = discord.Embed(colour=self.bot.embed_color)
         embed.title = "Random Kitty \U0001f431 \U0001f60d"
-        embed.set_image(url=img_url)
+        embed.description = f"Fun fact: {res['fact']}"
+        embed.set_image(url=res["image"])
 
         await ctx.edit_original_response(embed=embed)
 
@@ -150,7 +150,7 @@ class Fun(commands.Cog):
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=10)
         ) as session:
-            async with session.get("https://shibe.online/api/birds") as res:
+            async with session.get("https://some-random-api.com/animal/bird") as res:
                 if res.status != 200:
                     return await ctx.edit_original_response(
                         content="An API-side error occurred. "
@@ -158,11 +158,11 @@ class Fun(commands.Cog):
                     )
 
                 res = await res.json()
-                img_url = res[0]
 
         embed = discord.Embed(colour=self.bot.embed_color)
         embed.title = "Random Birdie \U0001f426 \U0001f60d"
-        embed.set_image(url=img_url)
+        embed.description = f"Fun fact: {res['fact']}"
+        embed.set_image(url=res["image"])
 
         await ctx.edit_original_response(embed=embed)
 

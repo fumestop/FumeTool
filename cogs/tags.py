@@ -345,7 +345,23 @@ class Tags(
             await ctx.edit_original_response(content="No such tags found.")
 
         else:
-            pages = TagPaginatorSource(entries=tags, ctx=ctx)
+            entries = list()
+            for index, tag in enumerate(tags):
+                entry = await get_tag(
+                    self.bot.pool, guild_id=ctx.guild.id, name=tag, check_alias=True
+                )
+                entry.update(
+                    {
+                        "index": index + 1,
+                        "name": tag,
+                        "is_alias": await is_alias(
+                            self.bot.pool, guild_id=ctx.guild.id, alias=tag
+                        ),
+                    }
+                )
+                entries.append(entry)
+
+            pages = TagPaginatorSource(entries=entries, ctx=ctx)
             paginator = ViewMenuPages(
                 source=pages,
                 timeout=None,

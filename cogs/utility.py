@@ -701,7 +701,7 @@ class Utility(commands.Cog):
 
             embed = discord.Embed(color=self.bot.embed_color)
             embed.title = "Translation"
-            embed.description = translation.text
+            embed.description = f"```\n{translation.text}\n```"
 
             embed.add_field(
                 name="Detected Language",

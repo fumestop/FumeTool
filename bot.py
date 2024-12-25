@@ -223,7 +223,7 @@ class FumeTool(commands.AutoShardedBot):
 
     @property
     def owner(self) -> discord.User:
-        return self.bot_app_info.owner
+        return self.bot_app_info.team.owner
 
     @discord.utils.cached_property
     def webhook(self) -> discord.Webhook:

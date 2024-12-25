@@ -29,7 +29,7 @@ class TagPaginatorSource(ListPageSource):
         embed = discord.Embed(color=config.EMBED_COLOR)
         embed.title = "Tags"
         embed.description = "\n".join(
-            f"`{_tag['index']}.` **{_tag['name']}** "
+            f"`{_tag['index']}.` **{_tag['name']}{' (Alias)' if _tag['is_alias'] else ''}** "
             f"{'by ' + self.ctx.guild.get_member(_tag['user_id']).mention if self.show_owner else ''}"
             for _tag in page
         )
@@ -45,7 +45,7 @@ class TagPaginatorSource(ListPageSource):
             )
 
         embed.set_footer(
-            text=f"{self.get_max_pages()} page(s) | {len(self.entries)} tag(s)"
+            text=f"{self.get_max_pages()} page(s) | {len(self.entries)} tag(s) total"
         )
 
         return embed
@@ -88,7 +88,7 @@ class RolePaginatorSource(ListPageSource):
 
         embed.add_field(name=page["name"], value=page["value"], inline=False)
 
-        embed.set_footer(text=f"{self.get_max_pages()} permission categories")
+        # embed.set_footer(text=f"{self.get_max_pages()} permission categories")
 
         return embed
 
