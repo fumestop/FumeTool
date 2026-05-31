@@ -163,4 +163,3 @@ cython_debug/
 config.py
 logs/*.log
 logs/errors/*.log
-uv.lock
