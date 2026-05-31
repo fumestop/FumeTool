@@ -299,7 +299,7 @@ class Utility(commands.Cog):
         )
 
         stage_channel_permissions = (
-            f"```\n" f"Request to Speak: {permissions.request_to_speak}\n" f"```"
+            f"```\nRequest to Speak: {permissions.request_to_speak}\n```"
         )
 
         events_permissions = (
@@ -309,7 +309,7 @@ class Utility(commands.Cog):
             f"```"
         )
         advanced_permissions = (
-            f"```\n" f"Administrator: {permissions.administrator}\n" f"```"
+            f"```\nAdministrator: {permissions.administrator}\n```"
         )
 
         permissions_list = [
