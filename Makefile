@@ -1,43 +1,24 @@
-ifeq ($(OS),Windows_NT)
-    RM = powershell
-    RM_FLAGS = -Command "Remove-Item -Path"
-    RM_FLAGS_ALL = -Recurse -Force
-    SEP = \\
-else
-    RM = rm
-    RM_FLAGS = -f
-    RM_FLAGS_ALL =
-    SEP = /
-endif
-
-env:
-	uv venv
-
-rmenv:
-	rm -rf .venv
-
-install:
-	uv sync --no-dev
+install: install-prod
 
 install-dev:
-	uv sync --extra dev
+	uv sync --all-extras
 
-install-extras:
+install-prod:
 	uv sync --all-extras --no-dev
 
 run:
 	uv run launcher.py
 
-format:
-	ruff check --select I --fix .
-	ruff format .
+lint:
+	uv run ruff check --select I --fix .
+	uv run ruff format .
 
 clean:
-	$(RM) $(RM_FLAGS) logs$(SEP)*.log $(RM_FLAGS_ALL)
+	rm -f logs/*.log
 
 clean-all:
-	$(RM) $(RM_FLAGS) logs$(SEP)*.log $(RM_FLAGS_ALL)
-	$(RM) $(RM_FLAGS) logs$(SEP)errors$(SEP)*.log $(RM_FLAGS_ALL)
+	rm -f logs/*.log
+	rm -f logs/errors/*.log
 
-.PHONY: env rmenv install install-dev install-extras run format clean clean-all
+.PHONY: install install-dev install-prod run lint clean clean-all
 .DEFAULT_GOAL := run
