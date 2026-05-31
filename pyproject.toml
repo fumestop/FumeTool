@@ -11,12 +11,12 @@ requires-python = ">=3.12"
 dependencies = [
     "aiodns>=3.2.0",
     "aiomysql==0.3.2",
-    "better-ipc",
     "click>=8.1.7",
     "discord-ext-menus",
     "discord-ext-menus-views",
     "discord-py[speed]==2.7.1",
     "dnspython>=2.7.0",
+    "fumestop-ext-ipc==1.0.0",
     "googletrans",
     "gtts>=2.5.4",
     "httpx==0.27.2",
@@ -40,7 +40,6 @@ dev = [
 ]
 
 [tool.uv.sources]
-better-ipc = { git = "https://github.com/MiroslavRosenov/better-ipc/", rev = "efb145d9dabc0a90e4c6e32be08bd03ae4257249" }
 discord-ext-menus = { git = "https://github.com/Rapptz/discord-ext-menus", rev = "8686b5d1bbc1d3c862292eb436ab630d6e9c9b53" }
 discord-ext-menus-views = { git = "https://github.com/FumeStop/discord-ext-menus-views", rev = "35049b5e1c11a866d69359d7c6227d8715aaf27d" }
 googletrans = { git = "https://github.com/ssut/py-googletrans" }
