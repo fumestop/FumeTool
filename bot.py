@@ -22,8 +22,7 @@ from utils.db import (
     get_blacklisted_users,
     get_blacklisted_guilds,
 )
-
-import config
+from utils.config import Config
 
 
 class FumeTree(CommandTree):
@@ -223,7 +222,7 @@ class FumeTool(commands.AutoShardedBot):
             return await add_guild(self.pool, guild_id=guild.id)
 
     async def start(self, **kwargs) -> None:
-        await super().start(config.TOKEN, reconnect=True)
+        await super().start(Config.TOKEN, reconnect=True)
 
     async def close(self) -> None:
         await super().close()
@@ -238,7 +237,7 @@ class FumeTool(commands.AutoShardedBot):
 
     @property
     def config(self):
-        return __import__("config")
+        return Config
 
     @property
     def embed_color(self) -> int:

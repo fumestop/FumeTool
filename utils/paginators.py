@@ -5,9 +5,9 @@ from typing import Any, Optional
 import discord
 from discord.ext.menus import Menu, ListPageSource
 
-from .tools import format_boolean_text
+from utils.config import Config
 
-import config
+from .tools import format_boolean_text
 
 
 class TagPaginatorSource(ListPageSource):
@@ -26,7 +26,7 @@ class TagPaginatorSource(ListPageSource):
         self.show_owner: bool = show_owner
 
     async def format_page(self, menu: Menu, page: Any) -> discord.Embed:
-        embed = discord.Embed(color=config.EMBED_COLOR)
+        embed = discord.Embed(color=Config.EMBED_COLOR)
         embed.title = "Tags"
         embed.description = "\n".join(
             f"`{_tag['index']}.` **{_tag['name']}{' (Alias)' if _tag['is_alias'] else ''}** "
